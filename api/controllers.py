@@ -1,446 +1,390 @@
-#from django.shortcuts import render
+# @Author: Matthew Hale <matthale>
+# @Date:   2018-02-28T00:25:25-06:00
+# @Email:  mlhale@unomaha.edu
+# @Filename: controllers.py
+# @Last modified by:   matthale
+# @Last modified time: 2018-03-02T04:06:42-06:00
+# @Copyright: Copyright (C) 2018 Matthew L. Hale
 
-# Create your views here.
-from django.contrib.auth.models import *
-from django.contrib.auth import *
-from rest_framework import viewsets
+
+# Handy Django Functions
+from django.shortcuts import get_object_or_404, render
+from django.contrib.auth import authenticate, login, logout
+import datetime, pytz
+
+# Models and serializers
+from django.contrib.auth.models import User
+import api.models as api
+
+# REST API Libraries
+from rest_framework import viewsets, parsers, renderers
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-#from django.shortcuts import render_to_response
-from django.template import RequestContext
+from rest_framework.renderers import JSONRenderer
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-from django.shortcuts import *
 
-# Import models
-from django.db import models
-from django.contrib.auth.models import *
-from api.models import *
 
-#REST API
-from rest_framework import viewsets, filters, parsers, renderers
-from django.http import Http404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-from django.contrib.auth import authenticate, login, logout
-from rest_framework.permissions import *
-from rest_framework.decorators import *
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import list_route
 from rest_framework.authentication import *
-
-#filters
-#from filters.mixins import *
+#email
+from templated_email import send_templated_mail
+# filters
+# from filters.mixins import *
 
 from api.pagination import *
-import json, datetime, pytz
-from django.core import serializers
-import requests
 
-#bleach for input sanitization
+from django.core import serializers
+from django.core.exceptions import ValidationError
+
+
 import bleach
-#re for regex
-import re
 
 
 def home(request):
-   """
-   Send requests to / to the ember.js clientside app
-   """
-   return render_to_response('ember/index.html',
-               {}, RequestContext(request))
+	"""
+	Send requests to '/' to the ember.js clientside app
+	"""
 
-def xss_example(request):
-  """
-  Send requests to xss-example/ to the insecure client app
-  """
-  return render_to_response('dumb-test-app/index.html',
-              {}, RequestContext(request))
+	return render(request, 'index.html')
 
-class DogList(APIView):
+def staff_or_401(request):
+    if not request.user.is_staff:
+        return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
+
+def super_user_or_401(request):
+    if not request.user.is_superuser:
+        return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
+
+def admin_or_401(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
+
+class AwardViewSet(viewsets.ModelViewSet):
+    """
+    Profile Endpoint, loaded upon login typically alongside User
+    """
+    resource_name = 'awards'
+    queryset = api.Award.objects.all()
+    serializer_class = api.AwardSerializer
     permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser,parsers.FormParser)
-    renderer_classes = (renderers.JSONRenderer, )
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'title', 'description', 'awardlink','sponsororg', 'recurring','nomreq','recurinterval','opendate','nomdeadline','submdeadline','additionalinfo','source','previousapplicants','createdon')
 
-    def get(self, request, format=None):
-        dog = Dog.objects.all()
-        json_data = serializers.serialize('json', dog)
-        content = {'dog': json_data}
-        return HttpResponse(json_data, content_type='json')
+    def create(self, request):
+        admin_or_401(request)
 
+        serializer = api.AwardSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self,request, *args, **kwargs):
-        print 'REQUEST DATA'
-        print str(request.data)
+        serializer.save()
 
-        name = bleach.clean(request.data.get('name'))
-        if not re.match("^[A-Za-z]*$", name):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data)
 
-        age = int(request.data.get('age'))
+    def update(self, request, pk=None):
+        admin_or_401(request)
 
-        gender = bleach.clean(request.data.get('gender'))
-        if not re.match("^[A-Za-z]*$", gender):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = api.AwardSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        color = bleach.clean(request.data.get('color'))
-        if not re.match("^[A-Za-z]*$", color):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
 
-        favoriteFood = bleach.clean(request.data.get('favoriteFood'))
-        if not re.match("^[A-Za-z]*$", favoriteFood):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data)
 
-        favoriteToy = bleach.clean(request.data.get('favoriteToy'))
-        if not re.match("^[A-Za-z]*$", favoriteToy):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-        print "test pre breed object"
-        #request breed object via string
-        breedObject = Breed.objects.get(breedname = 'breed')
-        print "test pre breed object"
-        newDog = Dog(
-            name=name,
-            gender=gender,
-            age=age,
-            color=color,
-            favoriteToy=favoriteToy,
-            favoriteFood=favoriteFood,
-            breed=breedObject
-        )
-        print "test"
-        try:
-            newDog.clean_fields()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
+class UserViewSet(viewsets.ModelViewSet):
+	"""
+	Endpoint that allows user data to be viewed.
+	"""
+	resource_name = 'users'
+	serializer_class = api.UserSerializer
+	queryset = User.objects.all()
+	permission_classes = (IsAuthenticated,)
 
-        newDog.save()
+	def get_queryset(self):
+		user = self.request.user
+		if user.is_superuser:
+			return User.objects.all()
+		return User.objects.filter(username=user.username)
 
-        return Response({'success': True}, status=status.HTTP_200_OK)
+class ProfileViewSet(viewsets.ModelViewSet):
+	"""
+	Endpoint that allows user data to be viewed.
+	"""
+	resource_name = 'profiles'
+	serializer_class = api.ProfileSerializer
+	queryset = api.Profile.objects.all()
+	permission_classes = (IsAuthenticated,)
 
-class DogDetail(APIView):
+	def get_queryset(self):
+		user = self.request.user
+		if user.is_superuser:
+			return api.Profile.objects.all()
+		return api.Profile.objects.filter(user__username=user.username)
+
+class StemfieldViewSet(viewsets.ModelViewSet):
+    """
+    Stemfield endpoint
+    """
+    resource_name = 'stemfields'
+    queryset = api.Stemfield.objects.all()
+    serializer_class = api.StemfieldSerializer
     permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser,parsers.FormParser)
-    renderer_classes = (renderers.JSONRenderer, )
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('name',)
 
-    def get(self, request, id):
-        dog = Dog.objects.filter(pk=id)
-        json_data = serializers.serialize('json', dog)
-        content = {'dog': json_data}
-        return HttpResponse(json_data, content_type='json')
+    def create(self, request):
+        admin_or_401(request)
+
+        serializer = api.StemfieldSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        admin_or_401(request)
+
+        serializer = api.StemfieldSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
 
 
-    def put(self, request, id):
-        name = bleach.clean(request.data.get('name'))
-        if not re.match("^[A-Za-z]*$", name):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-
-        age = int(request.data.get('age'))
-
-        gender = bleach.clean(request.data.get('gender'))
-        if not re.match("^[A-Za-z]*$", gender):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-
-        color = bleach.clean(request.data.get('color'))
-        if not re.match("^[A-Za-z]*$", color):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-
-        favoriteFood = bleach.clean(request.data.get('favoriteFood'))
-        if not re.match("^[A-Za-z]*$", favoriteFood):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-
-        favoriteToy = bleach.clean(request.data.get('favoriteToy'))
-        if not re.match("^[A-Za-z]*$", favoriteToy):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-        #breed = request.data.get('breed')
-        #request breed object via string
-        breedObject = Breed.objects.get(breedname = bleach.clean(request.data.get('breed')))
-
-        updateDog = Dog(
-            pk = id,
-            name=name,
-            gender=gender,
-            age=age,
-            color=color,
-            favoriteToy=favoriteToy,
-            favoriteFood=favoriteFood,
-            breed=breedObject
-        )
-        try:
-            updateDog.clean_fields()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
-
-        updateDog.save()
-
-        return Response({'success': True}, status=status.HTTP_200_OK)
-    def delete(self, request, id):
-        try:
-            dog = Dog.objects.filter(pk=id).delete()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({'success': True}, status=status.HTTP_200_OK)
-
-class BreedList(APIView):
+class SourceViewSet(viewsets.ModelViewSet):
+    """
+    Source endpoint
+    """
+    resource_name = 'sources'
+    queryset = api.Source.objects.all()
+    serializer_class = api.SourceSerializer
     permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser,parsers.FormParser)
-    renderer_classes = (renderers.JSONRenderer, )
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('name',)
 
-    def get(self, request, format=None):
-        breed = Breed.objects.all()
-        json_data = serializers.serialize('json', breed)
-        content = {'breed': json_data}
-        return HttpResponse(json_data, content_type='json')
+    def create(self, request):
+        admin_or_401(request)
+
+        serializer = api.SourceSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        admin_or_401(request)
+
+        serializer = api.SourceSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
 
 
-    def post(self,request, *args, **kwargs):
-        print 'REQUEST DATA'
-        print str(request.data)
-        breedname = bleach.clean(request.data.get('breedname'))
-        if not re.match("^[A-Za-z]*$", breedname):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-        size = bleach.clean(request.data.get('size'))
-        if not re.match("^[A-Za-z]*$", size):
-            return Response({'success':False}, status=status.HTTP_400_BAD_REQUEST)
-        friendliness = bleach.clean(request.data.get('friendliness'))
-        trainability = bleach.clean(request.data.get('trainability'))
-        sheddingamount = bleach.clean(request.data.get('sheddingamount'))
-        exerciseneeds = bleach.clean(request.data.get('exerciseneeds'))
-
-
-        newBreed = Breed(
-            breedname=breedname,
-            size=size,
-            friendliness=friendliness,
-            trainability=trainability,
-            sheddingamount=sheddingamount,
-            exerciseneeds=exerciseneeds
-        )
-        try:
-            newBreed.clean_fields()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
-
-        newBreed.save()
-
-        return Response({'success': True}, status=status.HTTP_200_OK)
-
-class BreedDetail(APIView):
+class AwardpurposeViewSet(viewsets.ModelViewSet):
+    """
+    Awardpurpose endpoint
+    """
+    resource_name = 'awardpurposes'
+    queryset = api.Awardpurpose.objects.all()
+    serializer_class = api.AwardpurposeSerializer
     permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser,parsers.FormParser)
-    renderer_classes = (renderers.JSONRenderer, )
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('name',)
 
-    def get(self, request, id, format=None):
-        breed = Breed.objects.filter(pk=id)
-        json_data = serializers.serialize('json', breed)
-        content = {'breed': json_data}
-        return HttpResponse(json_data, content_type='json')
+    def create(self, request):
+        admin_or_401(request)
 
-    def put(self, request, id):
-        breedname = bleach.clean(request.data.get('breedname'))
-        size = bleach.clean(request.data.get('size'))
-        friendliness = bleach.clean(request.data.get('friendliness'))
-        trainability = bleach.clean(request.data.get('trainability'))
-        sheddingamount = bleach.clean(request.data.get('sheddingamount'))
-        exerciseneeds = bleach.clean(request.data.get('exerciseneeds'))
+        serializer = api.AwardpurposeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        updateBreed = Breed(
-            pk = id,
-            breedname=breedname,
-            size=size,
-            friendliness=friendliness,
-            trainability=trainability,
-            sheddingamount=sheddingamount,
-            exerciseneeds=exerciseneeds
-        )
-        try:
-            updateBreed.clean_fields()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
 
-        updateBreed.save()
+        return Response(serializer.data)
 
-        return Response({'success': True}, status=status.HTTP_200_OK)
+    def update(self, request, pk=None):
+        admin_or_401(request)
 
-    def delete(self, request,id):
+        serializer = api.AwardpurposeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            breed = Breed.objects.filter(pk=id).delete()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
 
-        return Response({'success': True}, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
+class AreaofinterestViewSet(viewsets.ModelViewSet):
+    """
+    Area of interest endpoint
+    """
+    resource_name = 'areaofinterests'
+    queryset = api.Areaofinterest.objects.all()
+    serializer_class = api.AreaofinterestSerializer
+    permission_classes = (AllowAny,)
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('name',)
+
+    def create(self, request):
+        admin_or_401(request)
+
+        serializer = api.AreaofinterestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        admin_or_401(request)
+
+        serializer = api.AreaofinterestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+
+class ApplicanttypeViewSet(viewsets.ModelViewSet):
+    """
+    ApplicantType endpoint
+    """
+    resource_name = 'applicanttypes'
+    queryset = api.Applicanttype.objects.all()
+    serializer_class = api.ApplicanttypeSerializer
+    permission_classes = (AllowAny,)
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('name',)
+
+    def create(self, request):
+        admin_or_401(request)
+
+        serializer = api.ApplicanttypeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        admin_or_401(request)
+
+        serializer = api.ApplicanttypeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+
+
 
 class Register(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         # Login
-        username = bleach.clean(request.POST.get('username')) #you need to apply validators to these
-        print username
-        password = bleach.clean(request.POST.get('password')) #you need to apply validators to these
-        email = bleach.clean(request.POST.get('email')) #you need to apply validators to these
-        gender = bleach.clean(request.POST.get('gender')) #you need to apply validators to these
-        age = bleach.clean(request.POST.get('age')) #you need to apply validators to these
-        educationlevel = bleach.clean(request.POST.get('educationlevel')) #you need to apply validators to these
-        city = bleach.clean(request.POST.get('city')) #you need to apply validators to these
-        state = bleach.clean(request.POST.get('state')) #you need to apply validators to these
+		username = request.POST.get('username')
+		password = request.POST.get('password')
+		email = request.POST.get('email')
+		if username is not None and password is not None and email is not None:
+	        # lastname = request.POST.get('lastname')
+	        # firstname = request.POST.get('firstname')
+	        # org = request.POST.get('org')
+	        # college = request.POST.get('college')
+	        # dept = request.POST.get('dept')
+	        # other_details = request.POST.get('otherdetails')
+	        # areas_of_interest = request.POST.get('areasofinterest')
+	        # areas_of_interest = api.Areaofinterest.objects.get_or_create(name=areas_of_interest)
 
-        print request.POST.get('username')
-        if User.objects.filter(username=username).exists():
-            return Response({'username': 'Username is taken.', 'status': 'error'})
-        elif User.objects.filter(email=email).exists():
-            return Response({'email': 'Email is taken.', 'status': 'error'})
+			print request.POST.get('username')
+			if User.objects.filter(username=username).exists():
+			    return Response({'username': 'Username is taken.', 'status': 'error'})
+			elif User.objects.filter(email=email).exists():
+			    return Response({'email': 'Email is taken.', 'status': 'error'})
+			# especially before you pass them in here
+			newuser = User.objects.create_user(email=email, username=username, password=password)
 
-        #especially before you pass them in here
-        newuser = User.objects.create_user(email=email, username=username, password=password)
-        newprofile = Profile(user=newuser, gender=gender, age=age, educationlevel=educationlevel, city=city, state=state)
-        newprofile.save()
+			newprofile = api.Profile(user=newuser)
 
-        return Response({'status': 'success', 'userid': newuser.id, 'profile': newprofile.id})
+			newprofile.save()
+			# Send email msg
+			# send_templated_mail(
+			#     template_name='welcome',
+			#     from_email='from@example.com',
+			#     recipient_list=[email],
+			#     context={
+			#         'username':username,
+			#         'email':email,
+			#     },
+			#     # Optional:
+			#     # cc=['cc@example.com'],
+			#     # bcc=['bcc@example.com'],
+			# )
+			return Response({'status': 'success', 'userid': newuser.id, 'profile': newprofile.id})
+		else:
+			return Response({'status': 'error'})
+
 
 class Session(APIView):
-    permission_classes = (AllowAny,)
-    def form_response(self, isauthenticated, userid, username, error=""):
-        data = {
-            'isauthenticated': isauthenticated,
-            'userid': userid,
-            'username': username
-        }
-        if error:
-            data['message'] = error
+	"""
+	Returns a JSON structure: {'isauthenticated':<T|F>,'userid': <int:None>,'username': <string|None>,'profileid': <int|None>}
+	"""
+	permission_classes = (AllowAny,)
+	def form_response(self, isauthenticated, userid, username, profileid, error=""):
+		data = {
+			'isauthenticated': 	isauthenticated,
+			'userid': 			userid,
+			'username': 		username,
+			'profileid':		profileid,
+		}
+		if error:
+			data['message'] = error
 
-        return Response(data)
+		return Response(data)
 
-    def get(self, request, *args, **kwargs):
-        # Get the current user
-        if request.user.is_authenticated():
-            return self.form_response(True, request.user.id, request.user.username)
-        return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+	def get(self, request, *args, **kwargs):
+		# Get the current user
+		user = request.user
+		if user.is_authenticated():
+			profile = get_object_or_404(api.Profile,user__username=user.username)
+			return self.form_response(True, user.id, user.username, profile.id)
+		return self.form_response(False, None, None, None)
 
-    def post(self, request, *args, **kwargs):
-        # Login
-        username = bleach.clean(request.POST.get('username'))
-        password = bleach.clean(request.POST.get('password'))
-        user = authenticate(username=username, password=password)
-        if request.user.is_authenticated():
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                    return self.form_response(True, user.id, user.username)
-                return self.form_response(False, None, None, "Account is suspended")
-            return self.form_response(False, None, None, "Invalid username or password")
-        return self.form_response(False, None, None)
+	def post(self, request, *args, **kwargs):
+		print(request.data)
+		# Login
+		username = request.POST.get('username')
+		password = request.POST.get('password')
+		user = authenticate(username=username, password=password)
+		if user is not None:
+			if user.is_active:
+				login(request, user)
+				profile = get_object_or_404(api.Profile,user__username=user.username)
+				return self.form_response(True, user.id, user.username, profile.id)
+			return self.form_response(False, None, None, None, "Account is suspended")
+		return self.form_response(False, None, None, None, "Invalid username or password")
 
-    def delete(self, request, *args, **kwargs):
-        # Logout
-        logout(request)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-class Events(APIView):
-    permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser,parsers.FormParser)
-    renderer_classes = (renderers.JSONRenderer,)
-
-    def form_response(self, isauthenticated, userid, username, error=""):
-        data = {
-            'isauthenticated': isauthenticated,
-            'userid': userid,
-            'username': username
-        }
-        if error:
-            data['message'] = error
-
-        return Response(data)
-    def post(self, request, *args, **kwargs):
-        if request.user.is_authenticated():
-
-            print 'REQUEST DATA'
-            print str(request.data)
-
-            eventtype = bleach.clean(request.data.get('eventtype'))
-            timestamp = int(request.data.get('timestamp'))
-
-            userid = bleach.clean(request.data.get('userid'))
-            requestor = request.META['REMOTE_ADDR']
-
-            newEvent = Event(
-                eventtype=eventtype,
-                timestamp=datetime.datetime.fromtimestamp(timestamp/1000, pytz.utc),
-                userid=userid,
-                requestor=requestor
-            )
-
-            try:
-                newEvent.clean_fields()
-            except ValidationError as e:
-                print e
-                return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
-
-            newEvent.save()
-            print 'New Event Logged from: ' + requestor
-            return Response({'success': True}, status=status.HTTP_200_OK)
-        return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
-
-    def get(self, request, format=None):
-        events = Event.objects.all()
-        json_data = serializers.serialize('json', events)
-        content = {'events': json_data}
-        return HttpResponse(json_data, content_type='json')
-
-class ActivateIFTTT(APIView):
-    permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser,parsers.FormParser)
-    renderer_classes = (renderers.JSONRenderer, )
-
-    def post(self,request):
-        print 'REQUEST DATA'
-        print str(request.data)
-
-        eventtype = bleach.clean(request.data.get('eventtype'))
-
-        timestamp = int(request.data.get('timestamp'))
-        requestor = request.META['REMOTE_ADDR']
-        api_key = ApiKey.objects.all().first()
-        event_hook = "test"
-
-        print "Creating New event"
-
-        newEvent = Event(
-            eventtype=eventtype,
-            timestamp=datetime.datetime.fromtimestamp(timestamp/1000, pytz.utc),
-            userid=str(api_key.owner),
-            requestor=requestor
-        )
-
-        print newEvent
-        print "Sending Device Event to IFTTT hook: " + str(event_hook)
-
-        #send the new event to IFTTT and print the result
-        event_req = requests.post('https://maker.ifttt.com/trigger/'+str(event_hook)+'/with/key/'+api_key.key, data= {
-            'value1' : timestamp,
-            'value2':  "\""+str(eventtype)+"\"",
-            'value3' : "\""+str(requestor)+"\""
-        })
-        print event_req.text
-
-        #check that the event is safe to store in the databse
-        try:
-            newEvent.clean_fields()
-        except ValidationError as e:
-            print e
-            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
-
-        #log the event in the DB
-        newEvent.save()
-        print 'New Event Logged'
-        return Response({'success': True}, status=status.HTTP_200_OK)
+	def delete(self, request, *args, **kwargs):
+		# Logout
+		logout(request)
+		return Response(status=status.HTTP_204_NO_CONTENT)
