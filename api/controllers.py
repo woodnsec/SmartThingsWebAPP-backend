@@ -64,6 +64,39 @@ def admin_or_401(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
 
+class SmartThingsViewSet(viewsets.ModelViewSet):
+	"""
+    Smart Things Endpoint
+    """
+    resource_name = 'awards'
+    queryset = api.Award.objects.all()
+    """serializer_class = api.AwardSerializer"""
+    permission_classes = (AllowAny,)
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'title', 'description', 'awardlink','sponsororg', 'recurring','nomreq','recurinterval','opendate','nomdeadline','submdeadline','additionalinfo','source','previousapplicants','createdon')
+
+    def create(self, request):
+        admin_or_401(request)
+
+        serializer = api.AwardSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        admin_or_401(request)
+
+        serializer = api.AwardSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
 class AwardViewSet(viewsets.ModelViewSet):
     """
     Profile Endpoint, loaded upon login typically alongside User
