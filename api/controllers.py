@@ -64,272 +64,76 @@ def admin_or_401(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
 
-class SmartThingsViewSet(viewsets.ModelViewSet):
-	"""
-    Smart Things Endpoint
+from api.pagination import *
+import json, datetime, pytz
+from django.core import serializers
+from django.core.validators import validate_email, validate_image_file_extension
+import requests
+
+# bleach for input sanitizing input
+import bleach
+# re for regex
+import re
+
+
+def home(request):
     """
-    resource_name = 'awards'
-    queryset = api.Award.objects.all()
-    """serializer_class = api.AwardSerializer"""
+    Send requests to / to the ember.js clientside app
+    """
+    return render_to_response('index.html',
+                              {}, RequestContext(request))
+
+"""
+one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
+"""
+
+class MediaList(APIView):
+    """
+    Interacting with all media objects
+    """
     permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('id', 'title', 'description', 'awardlink','sponsororg', 'recurring','nomreq','recurinterval','opendate','nomdeadline','submdeadline','additionalinfo','source','previousapplicants','createdon')
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.AwardSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.AwardSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-class AwardViewSet(viewsets.ModelViewSet):
-    """
-    Profile Endpoint, loaded upon login typically alongside User
-    """
-    resource_name = 'awards'
-    queryset = api.Award.objects.all()
-    serializer_class = api.AwardSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('id', 'title', 'description', 'awardlink','sponsororg', 'recurring','nomreq','recurinterval','opendate','nomdeadline','submdeadline','additionalinfo','source','previousapplicants','createdon')
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.AwardSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.AwardSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-class UserViewSet(viewsets.ModelViewSet):
-	"""
-	Endpoint that allows user data to be viewed.
-	"""
-	resource_name = 'users'
-	serializer_class = api.UserSerializer
-	queryset = User.objects.all()
-	permission_classes = (IsAuthenticated,)
-
-	def get_queryset(self):
-		user = self.request.user
-		if user.is_superuser:
-			return User.objects.all()
-		return User.objects.filter(username=user.username)
-
-class ProfileViewSet(viewsets.ModelViewSet):
-	"""
-	Endpoint that allows user data to be viewed.
-	"""
-	resource_name = 'profiles'
-	serializer_class = api.ProfileSerializer
-	queryset = api.Profile.objects.all()
-	permission_classes = (IsAuthenticated,)
-
-	def get_queryset(self):
-		user = self.request.user
-		if user.is_superuser:
-			return api.Profile.objects.all()
-		return api.Profile.objects.filter(user__username=user.username)
-
-class StemfieldViewSet(viewsets.ModelViewSet):
-    """
-    Stemfield endpoint
-    """
-    resource_name = 'stemfields'
-    queryset = api.Stemfield.objects.all()
-    serializer_class = api.StemfieldSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('name',)
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.StemfieldSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.StemfieldSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-
-class SourceViewSet(viewsets.ModelViewSet):
-    """
-    Source endpoint
-    """
-    resource_name = 'sources'
-    queryset = api.Source.objects.all()
-    serializer_class = api.SourceSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('name',)
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.SourceSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.SourceSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-
-class AwardpurposeViewSet(viewsets.ModelViewSet):
-    """
-    Awardpurpose endpoint
-    """
-    resource_name = 'awardpurposes'
-    queryset = api.Awardpurpose.objects.all()
-    serializer_class = api.AwardpurposeSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('name',)
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.AwardpurposeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.AwardpurposeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-class AreaofinterestViewSet(viewsets.ModelViewSet):
-    """
-    Area of interest endpoint
-    """
-    resource_name = 'areaofinterests'
-    queryset = api.Areaofinterest.objects.all()
-    serializer_class = api.AreaofinterestSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('name',)
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.AreaofinterestSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.AreaofinterestSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-
-class ApplicanttypeViewSet(viewsets.ModelViewSet):
-    """
-    ApplicantType endpoint
-    """
-    resource_name = 'applicanttypes'
-    queryset = api.Applicanttype.objects.all()
-    serializer_class = api.ApplicanttypeSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('name',)
-
-    def create(self, request):
-        admin_or_401(request)
-
-        serializer = api.ApplicanttypeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        admin_or_401(request)
-
-        serializer = api.ApplicanttypeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-
-        return Response(serializer.data)
-
-
-
+    parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
+    renderer_classes = (renderers.JSONRenderer,)
+
+    def get(self, request, format=None):
+        # return all media objections
+        print('REQUEST DATA')
+		try:
+			request = str(request.data)
+        print(str(request.data))
+
+        # media = Media.objects.all()
+        # json_data = serializers.serialize('json', media)
+        # content = {'media': json_data}
+        return HttpResponse(request, content_type='json')
+
+    def post(self, request):
+        # add a new media object; only admin users can do this.
+        print('REQUEST DATA')
+        print(str(request.data))
+
+        if request.user.has_perm('api.add_media'):
+            title = bleach.clean(request.data.get('title'))
+            imageFile = validate_image_file_extension(request.data.get('imageFile'))
+
+            newMedia = Media(
+                title=title,
+                imageFile=imageFile
+            )
+
+            try:
+                newMedia.clean_fields()
+            except ValidationError as e:
+                print(e)
+                return Response({'success': False, 'error': e}, status=status.HTTP_400_BAD_REQUEST)
+            print("Creating new media")
+
+            newMedia.save()
+            newMedia.imageFile.save(imageFile.name, imageFile, save=True)
+
+            return Response({'success': True}, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
 class Register(APIView):
     permission_classes = (AllowAny,)
