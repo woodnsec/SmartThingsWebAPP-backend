@@ -87,6 +87,21 @@ def home(request):
 one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
 """
 
+class Lifecycles(APIVIew):
+	"""
+	interacting with SmartThings Lifecycles
+	"""
+
+	permission_classes = (AllowAny,)
+    parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
+    renderer_classes = (renderers.JSONRenderer,)
+
+	def post(self, request):
+		print("REQUEST DATA: \n")
+		print(str(reuest.data))
+		
+		return HttpResponse(request, content_type='json')
+
 class MediaList(APIView):
     """
     Interacting with all media objects
