@@ -99,7 +99,22 @@ class Lifecycles(APIVIew):
 	def post(self, request):
 		print("REQUEST DATA: \n")
 		print(str(reuest.data))
-		
+
+		lifecycle = bleach.clean(request.data.get('lifecycle'))
+		if lifecycle == 'PING':
+			print("PING LIFECYCLE")
+		elif lifecycle == 'CONFIGURATION':
+			print("CONFIGURATION LIFECYCLE")
+		elif lifecycle == 'INSTALL':
+			print("INSTALL LIFECYCLE")
+		elif lifecycle == 'UPDATE':
+			print("UPDATE LIFECYCLE")
+		elif lifecycle == 'UNINSTALL':
+			print("UNINSTALL LIFECYCLE")
+		else:
+			print("Invalid POST")
+			return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
 		return HttpResponse(request, content_type='json')
 
 class MediaList(APIView):
