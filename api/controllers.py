@@ -80,21 +80,18 @@ def home(request):
     """
     Send requests to / to the ember.js clientside app
     """
-    return render_to_response('index.html',
-                              {}, RequestContext(request))
+    return render_to_response('index.html', RequestContext(request))
 
 """
 one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
 """
 
 class Lifecycles(APIVIew):
-	"""
-	interacting with SmartThings Lifecycles
-	"""
+	#nteracting with SmartThings Lifecycles
 
 	permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
-    renderer_classes = (renderers.JSONRenderer,)
+	parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
+	renderer_classes = (renderers.JSONRenderer,)
 
 	def post(self, request):
 		print("REQUEST DATA: \n")
@@ -102,7 +99,7 @@ class Lifecycles(APIVIew):
 
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
 		if lifecycle == 'PING':
-			print("PING LIFECYCLE")wd
+			print("PING LIFECYCLE")
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
 		elif lifecycle == 'INSTALL':
@@ -128,12 +125,6 @@ class MediaList(APIView):
     renderer_classes = (renderers.JSONRenderer,)
 
     def get(self, request, format=None):
-        # return all media objections
-        print('REQUEST DATA')
-		try:
-			request = str(request.data)
-        print(str(request.data))
-
         # media = Media.objects.all()
         # json_data = serializers.serialize('json', media)
         # content = {'media': json_data}
