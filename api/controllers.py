@@ -111,11 +111,13 @@ class Lifecycles(APIVIew):
 			print("UPDATE LIFECYCLE")
 		elif lifecycle == 'UNINSTALL':
 			print("UNINSTALL LIFECYCLE")
+		elif lifecycle == 'EVENT':
+			print("EVENT LIFECYCLE")
 		else:
 			print("Invalid POST")
 			return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
-		return HttpResponse(request, content_type='json')
+		return HttpResponse(request, content_type='json', status=status.HTTP_200_OK)
 
 class MediaList(APIView):
     """
