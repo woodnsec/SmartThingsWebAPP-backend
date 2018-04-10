@@ -24,10 +24,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.renderers import JSONRenderer
 from django_filters.rest_framework import DjangoFilterBackend
-
-
-
-
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import list_route
 from rest_framework.authentication import *
@@ -35,12 +31,10 @@ from rest_framework.authentication import *
 from templated_email import send_templated_mail
 # filters
 # from filters.mixins import *
-
 from api.pagination import *
 
 from django.core import serializers
 from django.core.exceptions import ValidationError
-
 
 import bleach
 
