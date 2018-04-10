@@ -102,7 +102,7 @@ class Lifecycles(APIVIew):
 
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
 		if lifecycle == 'PING':
-			print("PING LIFECYCLE")
+			print("PING LIFECYCLE")wd
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
 		elif lifecycle == 'INSTALL':
