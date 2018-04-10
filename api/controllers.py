@@ -94,21 +94,33 @@ class Lifecycles(APIVIew):
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
 		if lifecycle == 'PING':
 			print("PING LIFECYCLE")
+			challenge = bleach.clean(request.data.get('challenge'))
+			return Response(challenge, content_type='json', status=status.HTTP_200_OK)
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
+
+			return Response(challenge, content_type='json', status=status.HTTP_200_OK)
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
+
+			return Response(challenge, content_type='json', status=status.HTTP_200_OK)
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
+
+			return Response(content_type='json', status=status.HTTP_200_OK)
 		elif lifecycle == 'UNINSTALL':
 			print("UNINSTALL LIFECYCLE")
+
+			return Response(content_type='json', status=status.HTTP_200_OK)
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
+
+			return Response(content_type='json', status=status.HTTP_200_OK)
 		else:
 			print("Invalid POST")
 			return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
-		return HttpResponse(request, content_type='json', status=status.HTTP_200_OK)
+
 
 class MediaList(APIView):
     """
