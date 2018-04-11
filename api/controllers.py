@@ -87,17 +87,16 @@ class Lifecycles(APIView):
 		print(currentWeatherDict)
 
 		location = currentWeatherDict['name']
-		weatherMain = currentWeatherDict['weather']
-		print(location)
-		print(weatherMain)
+		weatherMain = currentWeatherDict['weather'][0]['main']
+		weatherId = str(currentWeatherDict['weather'][0]['id'])
+		weatherDescription = currentWeatherDict['weather'][0]['description']
+		cloudinessInt = str(currentWeatherDict['clouds']['all'])
+		print("Location: " + location)
+		print("Weather Type: " + weatherMain)
+		print("Weather ID: " + weatherId)
+		print("Weather Description: " + weatherDescription)
+		print("Cloudiness: " + cloudinessInt + "%")
 
-		#json_data = json.dumps(currentWeather)
-		#description = json_data('weather')['main']
-
-		#print(description)
-
-		#description = currentWeather.json()
-		#print(description)
 		return Response(currentWeatherDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
 		print("REQUEST DATA: \n")
