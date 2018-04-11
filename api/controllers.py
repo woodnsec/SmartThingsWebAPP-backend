@@ -108,7 +108,7 @@ class Lifecycles(APIView):
 			challenge = bleach.clean(request.data.get('pingData')["challenge"])
 			print(challenge)
 
-			# nested dictionary below to send appropriate json response
+			# nested dictionary below to send appropriate nested json response
 			response = {'pingData': {'challenge': challenge}}
 
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
@@ -120,17 +120,24 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
+			# do something here
+
 			response = {'installData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
+			# do something here
 
-			return Response(content_type='json', status=status.HTTP_200_OK)
+			response = {'updateData': {}}
+			return Response(response, content_type='json', status=status.HTTP_200_OK)
+
 		elif lifecycle == 'UNINSTALL':
 			print("UNINSTALL LIFECYCLE")
+			# do something here
 
-			return Response(content_type='json', status=status.HTTP_200_OK)
+			response = {'uninstallData': {}}
+			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
@@ -138,9 +145,11 @@ class Lifecycles(APIView):
 
 
 			# do handleEvent here like set mode (virtual switch) let the app take care of the rest.
+			# do something here
 
+			response = {'eventData': {}}
+			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
-			return Response(content_type='json', status=status.HTTP_200_OK)
 		else:
 			print("Invalid POST")
 			return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
