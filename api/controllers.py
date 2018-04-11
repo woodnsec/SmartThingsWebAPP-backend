@@ -58,8 +58,10 @@ def home(request):
 one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
 """
 # weather api stuff definitions here
-zipcode = 68116
-weatherApiKey = str(os.getenv('WEATHER_API_KEY'))
+zipcode = "zip=68116"
+weatherApiKeyEnv = str(os.getenv('WEATHER_API_KEY'))
+#weatherApiKeyLocal = open("/weatherApiKeyLocalTEST.txt", "w")
+weatherApiKey = "e5bb4047ac6378185823d9ae5aa2851a"
 APPID = "APPID=" + weatherApiKey
 weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
 
@@ -75,11 +77,28 @@ class Lifecycles(APIView):
 	def get(self, request):
 		print("REQUEST DATA: \n")
 		print(str(request.data))
-		print(weatherURL)
-		print(weatherApiKey)
-		request = requests.get(weatherURL)
-		print request
-		return Response(request, content_type='json', status=status.HTTP_200_OK)
+		print("weather URL: " + weatherURL)
+		print("weather API key: " + weatherApiKey)
+		#print("weather API key Local: " + weatherApiKeyLocal)
+		print("weather API key environment variable: " + weatherApiKeyEnv)
+		# API call to openweathermap
+		currentWeather = requests.get(weatherURL)
+		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
+		print(currentWeatherDict)
+
+		location = currentWeatherDict['name']
+		weatherMain = currentWeatherDict['weather']
+		print(location)
+		print(weatherMain)
+
+		#json_data = json.dumps(currentWeather)
+		#description = json_data('weather')['main']
+
+		#print(description)
+
+		#description = currentWeather.json()
+		#print(description)
+		return Response(currentWeatherDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
 		print("REQUEST DATA: \n")
 		print(str(request.data))
