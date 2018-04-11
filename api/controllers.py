@@ -10,7 +10,6 @@
 # Handy Django Functions
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import authenticate, login, logout
-import datetime, pytz
 
 # Models and serializers
 from django.contrib.auth.models import User
@@ -32,14 +31,20 @@ from templated_email import send_templated_mail
 # filters
 # from filters.mixins import *
 from api.pagination import *
-
 from django.core import serializers
 from django.core.exceptions import ValidationError
-
-import json
-
+import json, datetime, pytz
+import requests
+# bleach for input sanitizing input
 import bleach
+# re for regex
+import re
+# os for environment variables
+import os
 
+from api.pagination import *
+from django.core import serializers
+from django.core.validators import validate_email, validate_image_file_extension
 
 def home(request):
 	"""
@@ -48,54 +53,33 @@ def home(request):
 
 	return render(request, 'index.html')
 
-def staff_or_401(request):
-    if not request.user.is_staff:
-        return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
-
-def super_user_or_401(request):
-    if not request.user.is_superuser:
-        return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
-
-def admin_or_401(request):
-    if not (request.user.is_staff or request.user.is_superuser):
-        return Response({'success': False},status=status.HTTP_401_UNAUTHORIZED)
-
-from api.pagination import *
-import json, datetime, pytz
-from django.core import serializers
-from django.core.validators import validate_email, validate_image_file_extension
-import requests
-
-# bleach for input sanitizing input
-import bleach
-# re for regex
-import re
-
-
-
 
 """
 one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
 """
+# weather api stuff definitions here
+zipcode = 68116
+weatherApiKey = str(os.getenv('WEATHER_API_KEY'))
+APPID = "APPID=" + weatherApiKey
+weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
 
 class Lifecycles(APIView):
 	# interacting with SmartThings Lifecycles
 
-	# weather api stuff definitions here
-	zipcode = 68116
-	weatherApiKey = "test-key"
-	APPID = "APPID=" + weatherApiKey
-	weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
+
 
 	permission_classes = (AllowAny,)
 	parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
 	renderer_classes = (renderers.JSONRenderer,)
 
 	def get(self, request):
-		console.log("REQUEST DATA: \n")
+		print("REQUEST DATA: \n")
 		print(str(request.data))
-
-		return Response({'success': True}, content_type='json', status=status.HTTP_200_OK)
+		print(weatherURL)
+		print(weatherApiKey)
+		request = requests.get(weatherURL)
+		print request
+		return Response(request, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
 		print("REQUEST DATA: \n")
 		print(str(request.data))
@@ -110,7 +94,8 @@ class Lifecycles(APIView):
 
 			# nested dictionary below to send appropriate nested json response
 			response = {'pingData': {'challenge': challenge}}
-
+			# garbage return "{\"pingData\": {\"challenge\": \"1a904d57-4fab-4b15-a11e-1c4bfe7cb502\"}}"
+			# response = json.dumps({'pingData': {'challenge': challenge }})
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'CONFIGURATION':
