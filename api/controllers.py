@@ -107,9 +107,9 @@ class Lifecycles(APIView):
 			print(request.data.get('pingData')["challenge"])
 			challenge = bleach.clean(request.data.get('pingData')["challenge"])
 			print(challenge)
-
-			response = {}
-			response['pingData'] = "{" + "challenge: " + challenge + "}"
+			# nested dictionary below to send appropriate json response
+			response = {'pingData': {'challenge': challenge}}
+			# response['pingData'] = "{" + "challenge: " + challenge + "}"
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'CONFIGURATION':
