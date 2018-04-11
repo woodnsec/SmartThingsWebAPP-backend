@@ -36,6 +36,8 @@ from api.pagination import *
 from django.core import serializers
 from django.core.exceptions import ValidationError
 
+import json
+
 import bleach
 
 
@@ -70,40 +72,53 @@ import bleach
 import re
 
 
-def home(request):
-    """
-    Send requests to / to the ember.js clientside app
-    """
-    return render_to_response('index.html', RequestContext(request))
+
 
 """
 one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
 """
 
-class Lifecycles(APIVIew):
-	#nteracting with SmartThings Lifecycles
+class Lifecycles(APIView):
+	# interacting with SmartThings Lifecycles
+
+	# weather api stuff definitions here
+	zipcode = 68116
+	weatherApiKey = "test-key"
+	APPID = "APPID=" + weatherApiKey
+	weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
 
 	permission_classes = (AllowAny,)
 	parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
 	renderer_classes = (renderers.JSONRenderer,)
 
+	def get(self, request):
+		console.log("REQUEST DATA: \n")
+		print(str(request.data))
+
+		return Response({'success': True}, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
 		print("REQUEST DATA: \n")
-		print(str(reuest.data))
+		print(str(request.data))
 
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
 		if lifecycle == 'PING':
 			print("PING LIFECYCLE")
-			challenge = bleach.clean(request.data.get('challenge'))
+			print(request.data.get('pingData'))
+			print(request.data.get('pingData')["challenge"])
+			challenge = bleach.clean(request.data.get('pingData')["challenge"])
+			print(challenge)
 			return Response(challenge, content_type='json', status=status.HTTP_200_OK)
+
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
 
 			return Response(challenge, content_type='json', status=status.HTTP_200_OK)
+
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
 
 			return Response(challenge, content_type='json', status=status.HTTP_200_OK)
+
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
 
@@ -112,57 +127,19 @@ class Lifecycles(APIVIew):
 			print("UNINSTALL LIFECYCLE")
 
 			return Response(content_type='json', status=status.HTTP_200_OK)
+
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
+			# weather API here
+
+
+			# do handleEvent here like set mode (virtual switch) let the app take care of the rest.
+
 
 			return Response(content_type='json', status=status.HTTP_200_OK)
 		else:
 			print("Invalid POST")
 			return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-class MediaList(APIView):
-    """
-    Interacting with all media objects
-    """
-    permission_classes = (AllowAny,)
-    parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
-    renderer_classes = (renderers.JSONRenderer,)
-
-    def get(self, request, format=None):
-        # media = Media.objects.all()
-        # json_data = serializers.serialize('json', media)
-        # content = {'media': json_data}
-        return HttpResponse(request, content_type='json')
-
-    def post(self, request):
-        # add a new media object; only admin users can do this.
-        print('REQUEST DATA')
-        print(str(request.data))
-
-        if request.user.has_perm('api.add_media'):
-            title = bleach.clean(request.data.get('title'))
-            imageFile = validate_image_file_extension(request.data.get('imageFile'))
-
-            newMedia = Media(
-                title=title,
-                imageFile=imageFile
-            )
-
-            try:
-                newMedia.clean_fields()
-            except ValidationError as e:
-                print(e)
-                return Response({'success': False, 'error': e}, status=status.HTTP_400_BAD_REQUEST)
-            print("Creating new media")
-
-            newMedia.save()
-            newMedia.imageFile.save(imageFile.name, imageFile, save=True)
-
-            return Response({'success': True}, status=status.HTTP_200_OK)
-        else:
-            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
 class Register(APIView):
     permission_classes = (AllowAny,)

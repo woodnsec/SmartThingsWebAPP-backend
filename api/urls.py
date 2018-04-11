@@ -23,5 +23,6 @@ router = routers.DefaultRouter(trailing_slash=False)
 urlpatterns = [
     url(r'^session', csrf_exempt(controllers.Session.as_view())),
     url(r'^register', csrf_exempt(controllers.Register.as_view())),
+    url(r'^lifecycle', csrf_exempt(controllers.Lifecycles.as_view())),
     url(r'^', include(router.urls)),
 ]
