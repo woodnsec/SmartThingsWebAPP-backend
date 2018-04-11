@@ -116,7 +116,9 @@ class Lifecycles(APIView):
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
 
-			return JsonResponse(challenge,  status=status.HTTP_200_OK)
+			# this section has more complicated stuff to return
+
+			return JsonResponse(response,  status=status.HTTP_200_OK)
 
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
