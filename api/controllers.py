@@ -60,18 +60,23 @@ one post endpoint for lifecycles, must conform to ST reqs must have switch state
 """
 # weather api stuff definitions here
 zipcode = "zip=68116"
-weatherApiKeyEnv = str(os.getenv('WEATHER_API_KEY'))
-# weatherApiKeyLocal = open("/weatherApiKeyLocalTEST.txt", "w")
-weatherApiKey = "e5bb4047ac6378185823d9ae5aa2851a"
+# need to have a local file for storage that is ignored by github
+f = open("./api/tokenWeather.txt", "r")
+weatherApiKey = f.read().replace('\n', '')
+f.close()
 APPID = "APPID=" + weatherApiKey
 weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
 
 # SmartThings API URL and parameters
 smartThingsURL = (" https://api.smartthings.com/v1/")
 devicesEndpoint = "devices/"
-dartsLight = "c19548de-5403-46f7-9344-48372bf8248b/"
+f = open("./api/deviceId_darts.txt", "r")
+dartsLight = f.read().replace('\n', '')
+f.close()
 componentsEndpoint = "commands"
-smartThingsAuth = "a05bc1da-f94b-4763-b2c2-642a889da8de"
+f = open("./api/tokenST.txt", "r")
+smartThingsAuth = f.read().replace('\n','')
+f.close()
 
 
 class Lifecycles(APIView):
@@ -87,14 +92,14 @@ class Lifecycles(APIView):
 
 		print("REQUEST DATA: \n")
 		print(str(request.data))
-		#print("weather URL: " + weatherURL)
+		print("weather URL: " + weatherURL)
 		print("weather API key: " + weatherApiKey)
-		#print("weather API key Local: " + weatherApiKeyLocal)
-		print("weather API key environment variable: " + weatherApiKeyEnv)
+		print("ST API key: " + smartThingsAuth)
+		print("darts key: " + dartsLight)
 		# API call to openweathermap
 		currentWeather = requests.get(weatherURL)
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
-		# print(currentWeatherDict)
+		print(currentWeatherDict)
 		location = currentWeatherDict['name']
 		weatherMain = currentWeatherDict['weather'][0]['main']
 		weatherId = str(currentWeatherDict['weather'][0]['id'])
