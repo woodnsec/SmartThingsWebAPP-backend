@@ -93,12 +93,12 @@ class Lifecycles(APIView):
 		this get request is for testing api calls to weather API and SmartThings API
 		"""
 
-		print("REQUEST DATA: \n")
-		print(str(request.data))
-		print("weather URL: " + weatherURL)
-		print("weather API key: " + weatherApiKey)
-		print("ST API key: " + smartThingsAuth)
-		print("darts key: " + dartsLight)
+		#print("REQUEST DATA: \n")
+		#print(str(request.data))
+		#print("weather URL: " + weatherURL)
+		#print("weather API key: " + weatherApiKey)
+		#print("ST API key: " + smartThingsAuth)
+		#print("darts key: " + dartsLight)
 		# API call to openweathermap
 		params = {"zip": "68116", "APPID": weatherApiKey}
 		#print(params)
@@ -108,17 +108,31 @@ class Lifecycles(APIView):
 		#print(currentWeatherDict)
 		location = currentWeatherDict['name']
 		weatherMain = currentWeatherDict['weather'][0]['main']
-		weatherId = str(currentWeatherDict['weather'][0]['id'])
+		weatherId = currentWeatherDict['weather'][0]['id']
 		weatherDescription = currentWeatherDict['weather'][0]['description']
-		cloudinessInt = str(currentWeatherDict['clouds']['all'])
-		sunrise = str(currentWeatherDict['sys']['sunrise'])
-		sunset = str(currentWeatherDict['sys']['sunset'])
+		cloudinessInt = currentWeatherDict['clouds']['all']
+		sunrise = currentWeatherDict['sys']['sunrise']
+		sunset = currentWeatherDict['sys']['sunset']
 		# summary for console output
-		weatherSummary = ("Location: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + weatherId + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + cloudinessInt + "%\n")
-		sunTimes = ("Sunrise: " + sunrise + "\nSunset: " + sunset + "\n" )
-
+		weatherSummary = ("##########\nWeather Summary:\nLocation: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + str(weatherId) + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + str(cloudinessInt) + "%\n##########")
+		sunTimes = ("Sun Times:\nSunrise: " + str(sunrise) + "\nSunset: " + str(sunset) + "\n##########\n" )
 		print(weatherSummary)
 		print(sunTimes)
+
+		print("##########\nLogic results below:")
+		testInt = 802
+		if (weatherId == 800):
+			print("ITS CLEAR OUTSIDE")
+		elif (testInt in range(801,804)):
+			if (cloudinessInt <= 50):
+				print("NOT CLOUDY AT ALL")
+		elif (weatherId in range(700, 799)):
+			print("Atmosphere condition: " + weatherMain)
+
+		print("##########\n")
+
+
+
 
 		# API call to SmartThings GET device
 		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + "/components/main/status"), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
@@ -129,8 +143,15 @@ class Lifecycles(APIView):
 		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
 		print("deviceStatus: " + str(deviceStatus))
 
-		# API call to SmartThings POST device
-		switchCommand = "on"
+
+		if (deviceStatus == "off"):
+			print("light was off, turning on.")
+			switchCommand = "on"
+		else:
+			print("light was on, turning off.")
+			switchCommand = "off"
+
+		# API call to SmartThings POST device start
 		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
 
 		print(data)
