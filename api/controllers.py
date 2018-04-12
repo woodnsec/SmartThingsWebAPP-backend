@@ -124,7 +124,7 @@ class Lifecycles(APIView):
 		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + "/components/main/status"), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
 		print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
-		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
+		#print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
 		# trying to get device status
 		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
 		print("deviceStatus: " + str(deviceStatus))
