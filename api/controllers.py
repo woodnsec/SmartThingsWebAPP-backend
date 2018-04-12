@@ -73,7 +73,7 @@ devicesEndpoint = "devices/"
 f = open("./api/deviceId_darts.txt", "r")
 dartsLight = f.read().replace('\n', '')
 f.close()
-componentsEndpoint = "commands"
+componentsEndpoint = "/commands"
 f = open("./api/tokenST.txt", "r")
 smartThingsAuth = f.read().replace('\n','')
 f.close()
@@ -97,7 +97,9 @@ class Lifecycles(APIView):
 		print("ST API key: " + smartThingsAuth)
 		print("darts key: " + dartsLight)
 		# API call to openweathermap
+		"""
 		currentWeather = requests.get(weatherURL)
+		print(currentWeather)
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
 		print(currentWeatherDict)
 		location = currentWeatherDict['name']
@@ -113,9 +115,10 @@ class Lifecycles(APIView):
 
 		print(weatherSummary)
 		print(sunTimes)
+		"""
 
 		# API call to SmartThings GET device
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight), headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight), headers={'Authorization': 'Bearer ' + smartThingsAuth})
 		print("smartThingsGetDevices full request: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
@@ -124,6 +127,9 @@ class Lifecycles(APIView):
 		data = {"commands": [{"component": "main", "capability": "switch", "command": "off"}]}
 
 		print(data)
+		print(componentsEndpoint)
+		stURL = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint)
+		print (stURL)
 		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
 		print("smartThingsCommand full request: " + str(smartThingsCommand))
 		smartThingsCommandDict = json.loads(smartThingsCommand.text)
