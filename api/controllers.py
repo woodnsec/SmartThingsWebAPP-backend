@@ -121,13 +121,13 @@ class Lifecycles(APIView):
 		print(sunTimes)
 
 		# API call to SmartThings GET device
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + "/status"), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + "/components/main/status"), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
 		print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
 		# trying to get device status
-		#deviceStatus = smartThingsGetDevicesDict['components']['switch']['switch']['value']
-		#print("deviceStatus: " + deviceStatus)
+		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value']
+		print("deviceStatus: " + str(deviceStatus))
 
 		# API call to SmartThings POST device
 		switchCommand = "on"
