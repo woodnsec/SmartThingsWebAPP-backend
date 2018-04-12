@@ -126,7 +126,7 @@ class Lifecycles(APIView):
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
 		# trying to get device status
-		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value']
+		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
 		print("deviceStatus: " + str(deviceStatus))
 
 		# API call to SmartThings POST device
