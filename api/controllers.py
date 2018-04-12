@@ -70,6 +70,7 @@ weatherURL = ("https://api.openweathermap.org/data/2.5/weather?")# + str(zipcode
 # SmartThings API URL and parameters
 smartThingsURL = ("https://api.smartthings.com/v1/")
 devicesEndpoint = "devices/"
+deviceStatusCheckEndpoint = "/components/main/status"
 
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darts.txt", "r") as f:
@@ -121,9 +122,9 @@ class Lifecycles(APIView):
 
 		print("##########\nLogic results below:")
 		testInt = 802
-		if (weatherId == 800):
+		if (weatherId == 800): # weather is clear
 			print("ITS CLEAR OUTSIDE")
-		elif (testInt in range(801,804)):
+		elif (testInt in range(801,804)): # Weather is cloudy
 			if (cloudinessInt <= 50):
 				print("NOT CLOUDY AT ALL")
 		elif (weatherId in range(700, 799)):
@@ -135,7 +136,7 @@ class Lifecycles(APIView):
 
 
 		# API call to SmartThings GET device
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + "/components/main/status"), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
 		print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		#print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
