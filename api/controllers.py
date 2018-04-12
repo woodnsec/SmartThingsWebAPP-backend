@@ -101,11 +101,11 @@ class Lifecycles(APIView):
 		print("darts key: " + dartsLight)
 		# API call to openweathermap
 		params = {"zip": "68116", "APPID": weatherApiKey}
-		print(params)
+		#print(params)
 		currentWeather = requests.get(url = weatherURL, params = params)
-		print(currentWeather)
+		#print(currentWeather)
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
-		print(currentWeatherDict)
+		#print(currentWeatherDict)
 		location = currentWeatherDict['name']
 		weatherMain = currentWeatherDict['weather'][0]['main']
 		weatherId = str(currentWeatherDict['weather'][0]['id'])
@@ -113,7 +113,7 @@ class Lifecycles(APIView):
 		cloudinessInt = str(currentWeatherDict['clouds']['all'])
 		sunrise = str(currentWeatherDict['sys']['sunrise'])
 		sunset = str(currentWeatherDict['sys']['sunset'])
-
+		# summary for console output
 		weatherSummary = ("Location: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + weatherId + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + cloudinessInt + "%\n")
 		sunTimes = ("Sunrise: " + sunrise + "\nSunset: " + sunset + "\n" )
 
@@ -121,10 +121,13 @@ class Lifecycles(APIView):
 		print(sunTimes)
 
 		# API call to SmartThings GET device
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
-		print("smartThingsGetDevices full request: " + str(smartThingsGetDevices))
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + "/status"), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
+		print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
+		# trying to get device status
+		#deviceStatus = smartThingsGetDevicesDict['components']['switch']['switch']['value']
+		#print("deviceStatus: " + deviceStatus)
 
 		# API call to SmartThings POST device
 		switchCommand = "on"
@@ -138,7 +141,7 @@ class Lifecycles(APIView):
 		smartThingsCommandDict = json.loads(smartThingsCommand.text)
 		print("ST API POST Return: " + str(smartThingsCommandDict))
 
-		return Response(currentWeatherDict, content_type='json', status=status.HTTP_200_OK)
+		return Response(smartThingsGetDevicesDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
 		print("REQUEST DATA: \n")
 		print(str(request.data))
