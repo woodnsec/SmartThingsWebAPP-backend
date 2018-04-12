@@ -71,9 +71,11 @@ weatherURL = ("https://api.openweathermap.org/data/2.5/weather?")# + str(zipcode
 smartThingsURL = ("https://api.smartthings.com/v1/")
 devicesEndpoint = "devices/"
 
+# need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darts.txt", "r") as f:
 	dartsLight = f.read().replace('\r\n', '')
 
+# need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
 	smartThingsAuth = f.read().replace('\r\n', '')
