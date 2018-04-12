@@ -61,22 +61,23 @@ one post endpoint for lifecycles, must conform to ST reqs must have switch state
 # weather api stuff definitions here
 zipcode = "zip=68116"
 # need to have a local file for storage that is ignored by github
-f = open("./api/tokenWeather.txt", "r")
-weatherApiKey = f.read().replace('\n', '')
-f.close()
+with open("./api/tokenWeather.txt", "r") as f:
+	weatherApiKey = f.read().replace('\r\n', '')
+
 APPID = "APPID=" + weatherApiKey
-weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
+weatherURL = ("https://api.openweathermap.org/data/2.5/weather?")# + str(zipcode) + "&" + str(APPID))
 
 # SmartThings API URL and parameters
-smartThingsURL = (" https://api.smartthings.com/v1/")
+smartThingsURL = ("https://api.smartthings.com/v1/")
 devicesEndpoint = "devices/"
-f = open("./api/deviceId_darts.txt", "r")
-dartsLight = f.read().replace('\n', '')
-f.close()
+
+with open("./api/deviceId_darts.txt", "r") as f:
+	dartsLight = f.read().replace('\r\n', '')
+
 componentsEndpoint = "/commands"
-f = open("./api/tokenST.txt", "r")
-smartThingsAuth = f.read().replace('\n','')
-f.close()
+with open("./api/tokenST.txt", "r") as f:
+	smartThingsAuth = f.read().replace('\r\n', '')
+
 
 
 class Lifecycles(APIView):
@@ -97,8 +98,9 @@ class Lifecycles(APIView):
 		print("ST API key: " + smartThingsAuth)
 		print("darts key: " + dartsLight)
 		# API call to openweathermap
-		"""
-		currentWeather = requests.get(weatherURL)
+		params = {"zip": "68116", "APPID": weatherApiKey}
+		print(params)
+		currentWeather = requests.get(url = weatherURL, params = params)
 		print(currentWeather)
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
 		print(currentWeatherDict)
@@ -115,19 +117,18 @@ class Lifecycles(APIView):
 
 		print(weatherSummary)
 		print(sunTimes)
-		"""
 
 		# API call to SmartThings GET device
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight), headers={'Authorization': 'Bearer ' + smartThingsAuth})
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
 		print("smartThingsGetDevices full request: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
 
 		# API call to SmartThings POST device
-		data = {"commands": [{"component": "main", "capability": "switch", "command": "off"}]}
+		switchCommand = "on"
+		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
 
 		print(data)
-		print(componentsEndpoint)
 		stURL = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint)
 		print (stURL)
 		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
