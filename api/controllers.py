@@ -33,7 +33,8 @@ from templated_email import send_templated_mail
 from api.pagination import *
 from django.core import serializers
 from django.core.exceptions import ValidationError
-import json, datetime, pytz
+import json, pytz, time
+from datetime import datetime
 import requests
 # bleach for input sanitizing input
 import bleach
@@ -60,42 +61,68 @@ one post endpoint for lifecycles, must conform to ST reqs must have switch state
 # weather api stuff definitions here
 zipcode = "zip=68116"
 weatherApiKeyEnv = str(os.getenv('WEATHER_API_KEY'))
-#weatherApiKeyLocal = open("/weatherApiKeyLocalTEST.txt", "w")
+# weatherApiKeyLocal = open("/weatherApiKeyLocalTEST.txt", "w")
 weatherApiKey = "e5bb4047ac6378185823d9ae5aa2851a"
 APPID = "APPID=" + weatherApiKey
 weatherURL = ("https://api.openweathermap.org/data/2.5/weather?" + str(zipcode) + "&" + APPID)
 
+# SmartThings API URL and parameters
+smartThingsURL = (" https://api.smartthings.com/v1/")
+devicesEndpoint = "devices/"
+dartsLight = "c19548de-5403-46f7-9344-48372bf8248b/"
+componentsEndpoint = "commands"
+smartThingsAuth = "a05bc1da-f94b-4763-b2c2-642a889da8de"
+
+
 class Lifecycles(APIView):
 	# interacting with SmartThings Lifecycles
-
-
-
 	permission_classes = (AllowAny,)
 	parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
 	renderer_classes = (renderers.JSONRenderer,)
 
 	def get(self, request):
+		"""
+		this get request is for testing api calls to weather API and SmartThings API
+		"""
+
 		print("REQUEST DATA: \n")
 		print(str(request.data))
-		print("weather URL: " + weatherURL)
+		#print("weather URL: " + weatherURL)
 		print("weather API key: " + weatherApiKey)
 		#print("weather API key Local: " + weatherApiKeyLocal)
 		print("weather API key environment variable: " + weatherApiKeyEnv)
 		# API call to openweathermap
 		currentWeather = requests.get(weatherURL)
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
-		print(currentWeatherDict)
-
+		# print(currentWeatherDict)
 		location = currentWeatherDict['name']
 		weatherMain = currentWeatherDict['weather'][0]['main']
 		weatherId = str(currentWeatherDict['weather'][0]['id'])
 		weatherDescription = currentWeatherDict['weather'][0]['description']
 		cloudinessInt = str(currentWeatherDict['clouds']['all'])
-		print("Location: " + location)
-		print("Weather Type: " + weatherMain)
-		print("Weather ID: " + weatherId)
-		print("Weather Description: " + weatherDescription)
-		print("Cloudiness: " + cloudinessInt + "%")
+		sunrise = str(currentWeatherDict['sys']['sunrise'])
+		sunset = str(currentWeatherDict['sys']['sunset'])
+
+		weatherSummary = ("Location: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + weatherId + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + cloudinessInt + "%\n")
+		sunTimes = ("Sunrise: " + sunrise + "\nSunset: " + sunset + "\n" )
+
+		print(weatherSummary)
+		print(sunTimes)
+
+		# API call to SmartThings GET device
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight), headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
+		print("smartThingsGetDevices full request: " + str(smartThingsGetDevices))
+		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
+		print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
+
+		# API call to SmartThings POST device
+		data = {"commands": [{"component": "main", "capability": "switch", "command": "off"}]}
+
+		print(data)
+		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
+		print("smartThingsCommand full request: " + str(smartThingsCommand))
+		smartThingsCommandDict = json.loads(smartThingsCommand.text)
+		print("ST API POST Return: " + str(smartThingsCommandDict))
 
 		return Response(currentWeatherDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
