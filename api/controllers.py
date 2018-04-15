@@ -77,6 +77,10 @@ with open("./api/deviceId_darts.txt", "r") as f:
 	dartsLight = f.read().replace('\r\n', '')
 
 # need to have a local file for storage that is ignored by github
+with open("./api/deviceId_darkSwitch.txt", "r") as f:
+	darkSwitch = f.read().replace('\r\n', '')
+
+# need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
 	smartThingsAuth = f.read().replace('\r\n', '')
@@ -116,24 +120,9 @@ class Lifecycles(APIView):
 		sunset = currentWeatherDict['sys']['sunset']
 		# summary for console output
 		weatherSummary = ("##########\nWeather Summary:\nLocation: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + str(weatherId) + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + str(cloudinessInt) + "%\n##########")
-		sunTimes = ("Sun Times:\nSunrise: " + str(sunrise) + "\nSunset: " + str(sunset) + "\n##########\n" )
+		sunTimes = ("Sun Times in Epoc UTC:\nSunrise: " + str(sunrise) + "\nSunset: " + str(sunset) + "\n##########\n" )
 		print(weatherSummary)
 		print(sunTimes)
-
-		print("##########\nLogic results below:")
-		testInt = 802
-		if (weatherId == 800): # weather is clear
-			print("ITS CLEAR OUTSIDE")
-		elif (testInt in range(801,804)): # Weather is cloudy
-			if (cloudinessInt <= 50):
-				print("NOT CLOUDY AT ALL")
-		elif (weatherId in range(700, 799)):
-			print("Atmosphere condition: " + weatherMain)
-
-		print("##########\n")
-
-
-
 
 		# API call to SmartThings GET device
 		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
@@ -142,7 +131,7 @@ class Lifecycles(APIView):
 		#print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
 		# trying to get device status
 		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
-		print("deviceStatus: " + str(deviceStatus))
+		print("dartsLight deviceStatus: " + str(deviceStatus))
 
 
 		if (deviceStatus == "off"):
@@ -155,13 +144,61 @@ class Lifecycles(APIView):
 		# API call to SmartThings POST device start
 		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
 
-		print(data)
-		stURL = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint)
-		print (stURL)
+		#print(data)
 		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
-		print("smartThingsCommand full request: " + str(smartThingsCommand))
 		smartThingsCommandDict = json.loads(smartThingsCommand.text)
-		print("ST API POST Return: " + str(smartThingsCommandDict))
+
+		# troubleshooting if requests aren't good
+		if (str(smartThingsCommand) == "<Response [200]>"):
+			print("API Call Success!")
+		else:
+			print("smartThingsCommand response: " + str(smartThingsCommand))
+			print("ST API POST Return: " + str(smartThingsCommandDict))
+
+
+		# logic to switch darkSwitch on and off. This will trigger the modes switch at the hub via a routine
+		print("\n##########\nWeather logic results below:")
+
+		# check current status of darkSwitch
+		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + darkSwitch + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
+		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
+		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
+		stURL = (smartThingsURL + devicesEndpoint + darkSwitch + componentsEndpoint)
+		print("darkSwitch deviceStatus: " + str(deviceStatus))
+		# print("weatherId:" + str(weatherId))
+		#weatherId = 801 # for testing logic
+		#cloudinessInt = 49 # for testing logic
+		if (weatherId == 800): # weather is clear
+			print("ITS CLEAR OUTSIDE")
+			switchCommand = "off"
+		elif (weatherId in range(801,805)): # Weather is cloudy
+			if (cloudinessInt <= 50): # threshold for being dark outside
+				print("NOT CLOUDY AT ALL")
+				switchCommand = "off"
+			else:
+				print("more cloudy")
+				switchCommand = "on"
+		elif (weatherId in range(700, 799)):
+			print("Atmosphere condition: " + weatherMain)
+			switchCommand = "on"
+		else:
+			print("no matching weatherId")
+
+		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
+		#print(data)
+		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + darkSwitch + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
+
+		# troubleshooting if requests aren't good
+		if (str(smartThingsCommand) == "<Response [200]>"):
+			print("API Call Success!")
+		else:
+			print("smartThingsCommand response: " + str(smartThingsCommand))
+			print("ST API POST Return: " + str(smartThingsCommandDict))
+		smartThingsCommandDict = json.loads(smartThingsCommand.text)
+
+
+
+		print("##########\n")
 
 		return Response(smartThingsGetDevicesDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
