@@ -208,8 +208,8 @@ class Lifecycles(APIView):
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
 		if lifecycle == 'PING':
 			print("PING LIFECYCLE")
-			print(request.data.get('pingData'))
-			print(request.data.get('pingData')["challenge"])
+			#print(request.data.get('pingData'))
+			#print("challenge: " + request.data.get('pingData')["challenge"])
 			challenge = bleach.clean(request.data.get('pingData')["challenge"])
 			print(challenge)
 
@@ -221,10 +221,19 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
+			# print("Config Phase: " + request.data.get('configurationData')['phase'])
+			phase = request.data.get('configurationData')['phase']
+			if phase == "INITIALIZE":
+				print("Config Phase: " + phase)
+				print("TESTING INITIALIZE PHASE IF/ELSE BLOCK")
+				response = json.dumps({"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App for mode switching", "id":"app", "permissions":["l:devices","l:schedules"], "firstPageId": "1"}}})
+			else:
+				print("Config Phase: " + phase)
+
 
 			# this section has more complicated stuff to return
 
-			return JsonResponse(response,  status=status.HTTP_200_OK)
+			return Response(response,  status=status.HTTP_200_OK)
 
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
