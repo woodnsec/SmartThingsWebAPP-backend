@@ -126,7 +126,7 @@ class Lifecycles(APIView):
 
 		# API call to SmartThings GET device
 		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
-		print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
+		#print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
 		#print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
 		# trying to get device status
@@ -251,13 +251,16 @@ class Lifecycles(APIView):
 			print("EVENT LIFECYCLE")
 			# weather API here
 
-
 			# do handleEvent here like set mode (virtual switch) let the app take care of the rest.
 			# do something here
 
 			response = {'eventData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
+		elif lifecycle == 'OAUTH_CALLBACK':
+			print("OAUTH_CALLBACK LIFECYCLE")
+			response = {'oAuthCallbackData':'{}'}
+			return Response(response, content_type='json', status=status.HTTP_200_OK)
 		else:
 			print("Invalid POST")
 			return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
