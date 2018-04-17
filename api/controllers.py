@@ -168,6 +168,7 @@ class Lifecycles(APIView):
 		# print("weatherId:" + str(weatherId))
 		#weatherId = 801 # for testing logic
 		#cloudinessInt = 49 # for testing logic
+		print("testing git")
 		if (weatherId == 800): # weather is clear
 			print("ITS CLEAR OUTSIDE")
 			switchCommand = "off"
