@@ -279,15 +279,11 @@ class Lifecycles(APIView):
 							"permissions": ["r", "x"]
 						}
 				      ]
-
 				    }
 				  }
 				}
 
 				print("whew thats a lot of config: " + str(response))
-
-
-			# this section has more complicated stuff to return
 
 			return Response(response,  status=status.HTTP_200_OK)
 
