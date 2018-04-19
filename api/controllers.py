@@ -203,7 +203,7 @@ class Lifecycles(APIView):
 
 		return Response(smartThingsGetDevicesDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
-		print("REQUEST DATA: \n")
+		print("REQUEST DATA: ")
 		print(str(request.data))
 
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
@@ -226,10 +226,65 @@ class Lifecycles(APIView):
 			phase = request.data.get('configurationData')['phase']
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
-				print("TESTING INITIALIZE PHASE IF/ELSE BLOCK")
-				response = json.dumps({"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["l:devices", "r:devices", "w:devices", "x:devices", "r:schedules", "w:schedules"], "firstPageId": "1"}}})
-			elif phase == "":
+				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["l:devices", "r:devices", "x:devices", "r:schedules", "w:schedules"], "firstPageId": "1"}}}
+			elif phase == "PAGE":
 				print("Config Phase: " + phase)
+				response = {
+				  "configurationData": {
+				    "page": {
+				      "pageId": "1",
+				      "name": "Auto Update mode from weather",
+				      "nextPageId": "null",
+				      "previousPageId": "null",
+				      "complete": "true",
+				      "sections": [
+				        {
+				          "name": "What location to check weather for",
+				          "settings": [
+				            {
+								"id": "zipCode",
+								"name": "What 5-digit US Zip Code?",
+								"description": "Enter Zip Code",
+								"type": "NUMBER",
+								"required": "true"
+							}
+				          ]
+				        },
+				        {
+							"id": "scheduleInterval",
+							"name": "How often to check current weather?",
+							"description": "Tap to set",
+							"type": "ENUM",
+							"required": "true",
+							"multiple": "true",
+							"options": [
+								{
+									"id": "schedule-interval-5-minutes",
+									"name": "5 Minutes"
+								},
+								{
+									"id": "schedule-interval-10-minutes",
+									"name": "10 Minutes"
+								}
+							]
+						},
+						{
+							"id": "lights",
+							"name": "Which Lights to turn on?",
+							"description": "Tap to set",
+							"type": "DEVICE",
+							"required": "true",
+							"multiple": "true",
+							"capabilities": ["switch"],
+							"permissions": ["r", "x"]
+						}
+				      ]
+
+				    }
+				  }
+				}
+
+				print("whew thats a lot of config: " + str(response))
 
 
 			# this section has more complicated stuff to return
