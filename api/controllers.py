@@ -227,7 +227,7 @@ class Lifecycles(APIView):
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
 				print("TESTING INITIALIZE PHASE IF/ELSE BLOCK")
-				response = json.dumps({"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App for mode switching", "id":"app", "permissions":["l:devices","l:schedules"], "firstPageId": "1"}}})
+				response = json.dumps({"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["l:devices", "r:devices", "w:devices", "x:devices", "l:schedules"], "firstPageId": "1"}}})
 			else:
 				print("Config Phase: " + phase)
 
