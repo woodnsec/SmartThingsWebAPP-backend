@@ -74,16 +74,16 @@ deviceStatusCheckEndpoint = "/components/main/status"
 
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darts.txt", "r") as f:
-	dartsLight = f.read().rstrip()
+	dartsLight = f.read().replace('\r\n', '')
 
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darkSwitch.txt", "r") as f:
-	darkSwitch = f.read().rstrip()
+	darkSwitch = f.read().replace('\r\n', '')
 
 # need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
-	smartThingsAuth = f.read().rstrip()
+	smartThingsAuth = f.read().replace('\r\n', '')
 
 
 
@@ -227,8 +227,8 @@ class Lifecycles(APIView):
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
 				print("TESTING INITIALIZE PHASE IF/ELSE BLOCK")
-				response = json.dumps({"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["l:devices", "r:devices", "w:devices", "x:devices", "l:schedules"], "firstPageId": "1"}}})
-			else:
+				response = json.dumps({"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["l:devices", "r:devices", "w:devices", "x:devices", "r:schedules", "w:schedules"], "firstPageId": "1"}}})
+			elif phase == "":
 				print("Config Phase: " + phase)
 
 
