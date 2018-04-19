@@ -62,7 +62,7 @@ one post endpoint for lifecycles, must conform to ST reqs must have switch state
 zipcode = "zip=68116"
 # need to have a local file for storage that is ignored by github
 with open("./api/tokenWeather.txt", "r") as f:
-	weatherApiKey = f.read().replace('\r\n', '')
+	weatherApiKey = f.read().rstrip()
 
 APPID = "APPID=" + weatherApiKey
 weatherURL = ("https://api.openweathermap.org/data/2.5/weather?")# + str(zipcode) + "&" + str(APPID))
@@ -74,16 +74,16 @@ deviceStatusCheckEndpoint = "/components/main/status"
 
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darts.txt", "r") as f:
-	dartsLight = f.read().replace('\r\n', '')
+	dartsLight = f.read().rstrip()
 
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darkSwitch.txt", "r") as f:
-	darkSwitch = f.read().replace('\r\n', '')
+	darkSwitch = f.read().rstrip()
 
 # need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
-	smartThingsAuth = f.read().replace('\r\n', '')
+	smartThingsAuth = f.read().rstrip()
 
 
 
