@@ -55,9 +55,6 @@ def home(request):
 	return render(request, 'index.html')
 
 
-"""
-one post endpoint for lifecycles, must conform to ST reqs must have switch statement for lifecycles
-"""
 # weather api stuff definitions here
 zipcode = "zip=68116"
 # need to have a local file for storage that is ignored by github
@@ -249,34 +246,60 @@ class Lifecycles(APIView):
 								"required": "true"
 							}
 				          ]
+
 				        },
-				        {
-							"id": "scheduleInterval",
-							"name": "How often to check current weather?",
-							"description": "Tap to set",
-							"type": "ENUM",
-							"required": "true",
-							"multiple": "true",
-							"options": [
+						{
+							"name":"Weather update schedule",
+							"settings": [
 								{
-									"id": "schedule-interval-5-minutes",
-									"name": "5 Minutes"
-								},
-								{
-									"id": "schedule-interval-10-minutes",
-									"name": "10 Minutes"
+									"id":"schedule",
+									"name":"How often to check current weather?",
+									"description":"Tap to set",
+									"type":"ENUM",
+									"required": "true",
+									"multiple": "false",
+									"options": [
+								        {
+								            "id": "schedule-interval-5-minutes",
+								            "name": "5 Minutes"
+								        },
+								        {
+								            "id": "schedule-interval-10-minutes",
+								            "name": "10 Minutes"
+								        }
+								    ]
 								}
 							]
 						},
 						{
-							"id": "lights",
-							"name": "Which Lights to turn on?",
-							"description": "Tap to set",
-							"type": "DEVICE",
-							"required": "true",
-							"multiple": "true",
-							"capabilities": ["switch"],
-							"permissions": ["r", "x"]
+							"name":"Devices to monitor for presence",
+							"settings": [
+								{
+									"id":"devices",
+									"name":"Which Devices?",
+									"description":"Tap to set",
+									"type":"DEVICE",
+									"required": "true",
+									"multiple": "true",
+									"capabilities": ["switch"],
+									"permissions": ["r", "x"]
+								}
+							]
+						},
+						{
+							"name":"Lights to turn on",
+							"settings": [
+								{
+									"id":"lightswitches",
+									"name":"Which Lights?",
+									"description":"Tap to set",
+									"type":"DEVICE",
+									"required": "true",
+									"multiple": "true",
+									"capabilities": ["switch"],
+									"permissions": ["r", "x"]
+								}
+							]
 						}
 				      ]
 				    }
