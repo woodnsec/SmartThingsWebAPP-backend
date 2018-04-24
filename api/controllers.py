@@ -57,6 +57,10 @@ def home(request):
 
 # weather api stuff definitions here
 zipcode = "zip=68116"
+# cron schedules - not needed at this time.
+fiveMin = {"name":"schedule-interval-5-minutes", "'cron'": {"expression": "0/5 * * * ? *", "timezone":"CST"}}
+tenMin = {"name":"schedule-interval-10-minutes", "'cron'": {"expression": "0/10 * * * ? *", "timezone":"CST"}}
+fifteenMin = {"name":"schedule-interval-15-minutes", "'cron'": {"expression": "0/15 * * * ? *", "timezone":"CST"}}
 # need to have a local file for storage that is ignored by github
 with open("./api/tokenWeather.txt", "r") as f:
 	weatherApiKey = f.read().rstrip()
@@ -223,7 +227,7 @@ class Lifecycles(APIView):
 			phase = request.data.get('configurationData')['phase']
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
-				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:schedules", "w:schedules"], "firstPageId": "1"}}}
+				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:devices:*"], "firstPageId": "1"}}}
 			elif phase == "PAGE":
 				print("Config Phase: " + phase)
 				response = {
@@ -249,34 +253,11 @@ class Lifecycles(APIView):
 
 				        },
 						{
-							"name":"Weather update schedule",
-							"settings": [
-								{
-									"id":"schedule",
-									"name":"How often to check current weather?",
-									"description":"Tap to set",
-									"type":"ENUM",
-									"required": "true",
-									"multiple": "false",
-									"options": [
-								        {
-								            "id": "schedule-interval-5-minutes",
-								            "name": "5 Minutes"
-								        },
-								        {
-								            "id": "schedule-interval-10-minutes",
-								            "name": "10 Minutes"
-								        }
-								    ]
-								}
-							]
-						},
-						{
 							"name":"Devices to monitor for presence",
 							"settings": [
 								{
-									"id":"devices",
-									"name":"Which Devices?",
+									"id":"presenceDevices",
+									"name":"Which Presence Device(s)?",
 									"description":"Tap to set",
 									"type":"DEVICE",
 									"required": "true",
@@ -313,13 +294,31 @@ class Lifecycles(APIView):
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
 			# do something here
+			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
+			print("Installed App ID: " + installedAppId)
+			presenceDevice = request.data.get('installData')['installedApp']['installedAppId']
+			zipCode = request.data.get('installData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
+			print("Zipcode: " + str(zipCode))
+			"""data = {
+					[
+						{
+							"sourceType":"DEVICE",
+							"device": {
+								"deviceId":
+							}
+						}
+					]
+				}"""
+
 
 			response = {'installData': {}}
-			return Response(response, content_type='json', status=status.HTTP_200_OK)
+			return Response(response,  content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
 			# do something here
+			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
+			print("Installed App ID: " + installedAppId)
 
 			response = {'updateData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
@@ -327,9 +326,11 @@ class Lifecycles(APIView):
 		elif lifecycle == 'UNINSTALL':
 			print("UNINSTALL LIFECYCLE")
 			# do something here
+			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
+			print("Installed App ID: " + installedAppId)
 
 			response = {'uninstallData': {}}
-			return Response(response, content_type='json', status=status.HTTP_200_OK)
+			return Response({'updateData': {}}, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
