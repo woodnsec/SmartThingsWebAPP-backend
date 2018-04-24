@@ -317,17 +317,14 @@ class Lifecycles(APIView):
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
 			# do something here
-			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
-			print("Installed App ID: " + installedAppId)
-
+			
 			response = {'updateData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UNINSTALL':
 			print("UNINSTALL LIFECYCLE")
 			# do something here
-			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
-			print("Installed App ID: " + installedAppId)
+
 
 			response = {'uninstallData': {}}
 			return Response({'updateData': {}}, content_type='json', status=status.HTTP_200_OK)
