@@ -28,6 +28,6 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = ['localhost', 'django', '61773f0f.ngrok.io']
+ALLOWED_HOSTS = ['localhost', 'django', 'b76e2843.ngrok.io']
 DEBUG=False
 ENVIRONMENT = "DEV"
