@@ -22,12 +22,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'postgres',
+        'USER': 'postgres', 
         'HOST': 'db',
         'PORT': 5432,
     }
 }
 
-ALLOWED_HOSTS = ['localhost', 'django', 'd135d8a3.ngrok.io']
+ALLOWED_HOSTS = ['localhost', 'django', '737f04ed.ngrok.io']
 DEBUG=False
 ENVIRONMENT = "DEV"

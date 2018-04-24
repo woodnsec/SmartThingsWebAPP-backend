@@ -57,6 +57,7 @@ def home(request):
 
 # weather api stuff definitions here
 zipcode = "zip=68116"
+
 # cron schedules - not needed at this time.
 fiveMin = {"name":"schedule-interval-5-minutes", "'cron'": {"expression": "0/5 * * * ? *", "timezone":"CST"}}
 tenMin = {"name":"schedule-interval-10-minutes", "'cron'": {"expression": "0/10 * * * ? *", "timezone":"CST"}}
@@ -71,6 +72,8 @@ weatherURL = ("https://api.openweathermap.org/data/2.5/weather?")# + str(zipcode
 # SmartThings API URL and parameters
 smartThingsURL = ("https://api.smartthings.com/v1/")
 devicesEndpoint = "devices/"
+installedAppsEndpoint = "installedapps/"
+subscriptionEndpoint = "/subscriptions"
 deviceStatusCheckEndpoint = "/components/main/status"
 
 # need to have a local file for storage that is ignored by github
@@ -99,19 +102,11 @@ class Lifecycles(APIView):
 		this get request is for testing api calls to weather API and SmartThings API
 		"""
 
-		#print("REQUEST DATA: \n")
-		#print(str(request.data))
-		#print("weather URL: " + weatherURL)
-		#print("weather API key: " + weatherApiKey)
-		#print("ST API key: " + smartThingsAuth)
-		#print("darts key: " + dartsLight)
-		# API call to openweathermap
 		params = {"zip": "68116", "APPID": weatherApiKey}
-		#print(params)
+
 		currentWeather = requests.get(url = weatherURL, params = params)
-		#print(currentWeather)
+
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
-		#print(currentWeatherDict)
 		location = currentWeatherDict['name']
 		weatherMain = currentWeatherDict['weather'][0]['main']
 		weatherId = currentWeatherDict['weather'][0]['id']
@@ -166,10 +161,7 @@ class Lifecycles(APIView):
 		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
 		stURL = (smartThingsURL + devicesEndpoint + darkSwitch + componentsEndpoint)
 		print("darkSwitch deviceStatus: " + str(deviceStatus))
-		# print("weatherId:" + str(weatherId))
-		#weatherId = 801 # for testing logic
-		#cloudinessInt = 49 # for testing logic
-		print("testing git")
+
 		if (weatherId == 800): # weather is clear
 			print("ITS CLEAR OUTSIDE")
 			switchCommand = "off"
@@ -185,6 +177,7 @@ class Lifecycles(APIView):
 			switchCommand = "on"
 		else:
 			print("no matching weatherId")
+			switchCommand = "off"
 
 		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
 		#print(data)
@@ -227,7 +220,7 @@ class Lifecycles(APIView):
 			phase = request.data.get('configurationData')['phase']
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
-				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:devices:*"], "firstPageId": "1"}}}
+				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:devices:*", "r:schedules", "w:schedules"], "firstPageId": "1"}}}
 			elif phase == "PAGE":
 				print("Config Phase: " + phase)
 				response = {
@@ -296,43 +289,104 @@ class Lifecycles(APIView):
 			# do something here
 			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
 			print("Installed App ID: " + installedAppId)
-			presenceDevice = request.data.get('installData')['installedApp']['installedAppId']
+			presenceDeviceId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
+			presenceDeviceComponentId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['componentId']
+			print("presenceDeviceId: " + str(presenceDeviceId))
+			print("presenceDeviceComponentId: " + str(presenceDeviceComponentId))
 			zipCode = request.data.get('installData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
 			print("Zipcode: " + str(zipCode))
-			"""data = {
-					[
-						{
-							"sourceType":"DEVICE",
-							"device": {
-								"deviceId":
-							}
-						}
-					]
-				}"""
 
+			# format requst data to create subscription
+			data = json.dumps([{"sourceType":"DEVICE","device": {
+				"deviceId": presenceDeviceId,
+				"componentId": presenceDeviceComponentId,
+				"capability": "switch",
+				"attribute": "switch",
+				"stateChangeOnly": "true",
+				"value":"on"
+			}}])
+
+			print("Data for subscription: " + str(data))
+			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "data: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
+			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers = {'Authorization: Bearer ' + smartThingsAuth + ''})
+			print("ST subscription request: " + str(smartThingsCommand))
 
 			response = {'installData': {}}
-			return Response(response,  content_type='json', status=status.HTTP_200_OK)
+			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
-			# do something here
-			
 			response = {'updateData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UNINSTALL':
 			print("UNINSTALL LIFECYCLE")
-			# do something here
-
-
 			response = {'uninstallData': {}}
 			return Response({'updateData': {}}, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
-			# weather API here
+			#info from smartThings
+			zipCode = request.data.get('eventData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
+			print("Zipcode: " + str(zipCode))
+			presenceDeviceId = request.data.get('eventData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
+			print("presenceDeviceId: " + str(presenceDeviceId))
+			lightswitches = request.data.get('eventData')['installedApp']['config']['lightswitches'][0]['deviceConfig']['deviceId']
+			print("lightswitches: " + str(lightswitches))
 
+
+			# weather API here
+			params = {"zip": zipCode, "APPID": weatherApiKey}
+
+			currentWeather = requests.get(url = weatherURL, params = params)
+
+			currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
+			location = currentWeatherDict['name']
+			weatherMain = currentWeatherDict['weather'][0]['main']
+			weatherId = currentWeatherDict['weather'][0]['id']
+			weatherDescription = currentWeatherDict['weather'][0]['description']
+			cloudinessInt = currentWeatherDict['clouds']['all']
+			sunrise = currentWeatherDict['sys']['sunrise']
+			sunset = currentWeatherDict['sys']['sunset']
+			# summary for console output
+			weatherSummary = ("##########\nWeather Summary:\nLocation: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + str(weatherId) + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + str(cloudinessInt) + "%\n##########")
+			sunTimes = ("Sun Times in Epoc UTC:\nSunrise: " + str(sunrise) + "\nSunset: " + str(sunset) + "\n##########\n" )
+			print(weatherSummary)
+			print(sunTimes)
+
+			# SmartThings execution here
+			if (weatherId == 800): # weather is clear
+				print("ITS CLEAR OUTSIDE")
+				switchCommand = "off"
+			elif (weatherId in range(801,805)): # Weather is cloudy
+				if (cloudinessInt <= 50): # threshold for being dark outside
+					print("NOT CLOUDY AT ALL")
+					switchCommand = "off"
+				else:
+					print("more cloudy")
+					switchCommand = "on"
+			elif (weatherId in range(200, 799)):
+				print("Atmosphere condition: " + weatherMain)
+				switchCommand = "on"
+			else:
+				print("no matching weatherId")
+				switchCommand = "off"
+
+			data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
+			#print(data)
+			if (switchCommand == "on"):
+				smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + lightswitches + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
+
+				# troubleshooting if requests aren't good
+				if (str(smartThingsCommand) == "<Response [200]>"):
+					print("API Call Success!")
+				else:
+					print("smartThingsCommand response: " + str(smartThingsCommand))
+					print("ST API POST Return: " + str(smartThingsCommandDict))
+			else:
+				print("No action taken, its still light outside")
+
+			#print("Zipcode: " + str(zipCode))
 			# do handleEvent here like set mode (virtual switch) let the app take care of the rest.
 			# do something here
 
