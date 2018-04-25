@@ -220,7 +220,7 @@ class Lifecycles(APIView):
 			phase = request.data.get('configurationData')['phase']
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
-				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:devices:*", "r:schedules", "w:schedules"], "firstPageId": "1"}}}
+				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:devices:*", "r:schedules", "w:schedules", "w:installedapps:*"], "firstPageId": "1"}}}
 			elif phase == "PAGE":
 				print("Config Phase: " + phase)
 				response = {
@@ -311,16 +311,49 @@ class Lifecycles(APIView):
 			}}])
 
 			print("Data for subscription: " + str(data))
-			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "data: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
-			print("URL: " + str((smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
+			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
+			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
 			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
+			#print("ST subscription request text: " + smartThingsCommand.data)
 
 			response = {'installData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UPDATE':
 			print("UPDATE LIFECYCLE")
+			installedAppId = request.data.get('updateData')['installedApp']['installedAppId']
+			installAuthToken = request.data.get('updateData')['authToken']
+			installRefreshToken = request.data.get('updateData')['refreshToken']
+			print("Installed App token: " + str(installAuthToken))
+			print("Installed Refresh token: " + str(installRefreshToken))
+			print("Installed App ID: " + installedAppId)
+			presenceDeviceId = request.data.get('updateData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
+			presenceDeviceComponentId = request.data.get('updateData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['componentId']
+			print("presenceDeviceId: " + str(presenceDeviceId))
+			print("presenceDeviceComponentId: " + str(presenceDeviceComponentId))
+			zipCode = request.data.get('updateData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
+			print("Zipcode: " + str(zipCode))
+			# TODO delete previous subscription so I can post this new one.
+			# format requst data to create subscription
+			data = json.dumps([{"sourceType":"DEVICE","device": {
+				"deviceId": presenceDeviceId,
+				"componentId": presenceDeviceComponentId,
+				"capability": "switch",
+				"attribute": "switch",
+				"stateChangeOnly": "true",
+				"value":"on"
+			}}])
+
+			print("Data for subscription: " + str(data))
+			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
+			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
+			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
+			print("ST subscription request: " + str(smartThingsCommand))
+			#print("ST subscription request text: " + smartThingsCommand.data)
+
+
+
 			response = {'updateData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
