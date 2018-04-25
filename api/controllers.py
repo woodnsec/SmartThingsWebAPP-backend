@@ -288,6 +288,8 @@ class Lifecycles(APIView):
 			print("INSTALL LIFECYCLE")
 			# do something here
 			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
+			installAuthToken = request.data.get('installData')['authToken']
+			print("Installed App token: " + str(installAuthToken))
 			print("Installed App ID: " + installedAppId)
 			presenceDeviceId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
 			presenceDeviceComponentId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['componentId']
@@ -308,7 +310,7 @@ class Lifecycles(APIView):
 
 			print("Data for subscription: " + str(data))
 			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "data: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
-			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers = {'Authorization: Bearer ' + smartThingsAuth + ''})
+			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
 
 			response = {'installData': {}}
@@ -326,10 +328,9 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
-
-
 			#info from smartThings
 			zipCode = request.data.get('eventData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
+
 			print("Zipcode: " + str(zipCode))
 			presenceDeviceId = request.data.get('eventData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
 			print("presenceDeviceId: " + str(presenceDeviceId))
