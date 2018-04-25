@@ -326,13 +326,22 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
+
+
 			#info from smartThings
 			zipCode = request.data.get('eventData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
 			print("Zipcode: " + str(zipCode))
 			presenceDeviceId = request.data.get('eventData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
 			print("presenceDeviceId: " + str(presenceDeviceId))
 			lightswitches = request.data.get('eventData')['installedApp']['config']['lightswitches'][0]['deviceConfig']['deviceId']
-			print("lightswitches: " + str(lightswitches))
+			#lightswitches = request.data.get('eventData')['installedApp']['config']['lightswitches']
+			#lightswitches = request.body.decode('utf-8')
+
+			#lightswitchesDict = json.loads(str(lightswitches))
+			#print("lightswitches: " + str(lightswitchesDict))
+
+			for lightswitch in request.data.get('eventData')['installedApp']['config']['lightswitches']:
+				print(lightswitch['deviceConfig']['deviceId'])
 
 
 			# weather API here
