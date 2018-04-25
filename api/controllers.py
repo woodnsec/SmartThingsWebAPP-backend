@@ -289,7 +289,9 @@ class Lifecycles(APIView):
 			# do something here
 			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
 			installAuthToken = request.data.get('installData')['authToken']
+			installRefreshToken = request.data.get('installData')['refreshToken']
 			print("Installed App token: " + str(installAuthToken))
+			print("Installed Refresh token: " + str(installRefreshToken))
 			print("Installed App ID: " + installedAppId)
 			presenceDeviceId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
 			presenceDeviceComponentId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['componentId']
@@ -310,6 +312,7 @@ class Lifecycles(APIView):
 
 			print("Data for subscription: " + str(data))
 			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "data: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
+			print("URL: " + str((smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
 			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
 
