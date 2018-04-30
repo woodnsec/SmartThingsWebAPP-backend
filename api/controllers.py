@@ -254,8 +254,8 @@ class Lifecycles(APIView):
 									"type":"DEVICE",
 									"required": "true",
 									"multiple": "true",
-									"capabilities": ["switch"],
-									"permissions": ["r", "x"]
+									"capabilities": ["presenceSensor"],
+									"permissions": ["r"]
 								}
 							]
 						},
@@ -307,10 +307,10 @@ class Lifecycles(APIView):
 				data = json.dumps({"sourceType":"DEVICE","device": {
 					"deviceId": currentPresenceDeviceId,
 					"componentId": currentComponentId,
-					"capability": "switch",
-					"attribute": "switch",
+					"capability": "presenceSensor",
+					"attribute": "presence",
 					"stateChangeOnly": "true",
-					"value":"on"
+					"value":"present"
 				}})
 
 				smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
@@ -351,10 +351,10 @@ class Lifecycles(APIView):
 				data = json.dumps({"sourceType":"DEVICE","device": {
 					"deviceId": currentPresenceDeviceId,
 					"componentId": currentComponentId,
-					"capability": "switch",
-					"attribute": "switch",
+					"capability": "presenceSensor",
+					"attribute": "presence",
 					"stateChangeOnly": "true",
-					"value":"on"
+					"value":"present"
 				}})
 
 				smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
