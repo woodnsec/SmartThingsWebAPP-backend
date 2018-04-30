@@ -279,7 +279,7 @@ class Lifecycles(APIView):
 				    }
 				  }
 				}
-
+				# TODO fix presence devices to actually monitor presence Devices.
 				print("whew thats a lot of config: " + str(response))
 
 			return Response(response,  status=status.HTTP_200_OK)
@@ -311,11 +311,10 @@ class Lifecycles(APIView):
 			}})
 
 			print("Data for subscription: " + str(data))
-			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
 			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
 			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
-			#print("ST subscription request text: " + smartThingsCommand.data)
+			print("ST subscription request text: " + smartThingsCommand.content)
 
 			response = {'installData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
@@ -371,15 +370,6 @@ class Lifecycles(APIView):
 			presenceDeviceId = request.data.get('eventData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
 			print("presenceDeviceId: " + str(presenceDeviceId))
 			lightswitches = request.data.get('eventData')['installedApp']['config']['lightswitches'][0]['deviceConfig']['deviceId']
-			#lightswitches = request.data.get('eventData')['installedApp']['config']['lightswitches']
-			#lightswitches = request.body.decode('utf-8')
-
-			#lightswitchesDict = json.loads(str(lightswitches))
-			#print("lightswitches: " + str(lightswitchesDict))
-
-			for lightswitch in request.data.get('eventData')['installedApp']['config']['lightswitches']:
-				print(lightswitch['deviceConfig']['deviceId'])
-
 
 			# weather API here
 			params = {"zip": zipCode, "APPID": weatherApiKey}
@@ -418,10 +408,13 @@ class Lifecycles(APIView):
 				print("no matching weatherId")
 				switchCommand = "off"
 
+			switchCommand = "on" # test value to illustrate event lifecycle. 
 			data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
 			#print(data)
 			if (switchCommand == "on"):
-				smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + lightswitches + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
+				for lightswitch in request.data.get('eventData')['installedApp']['config']['lightswitches']:
+					currentLight = lightswitch['deviceConfig']['deviceId']
+					smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + currentLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
 
 				# troubleshooting if requests aren't good
 				if (str(smartThingsCommand) == "<Response [200]>"):
