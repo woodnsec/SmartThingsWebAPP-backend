@@ -334,7 +334,10 @@ class Lifecycles(APIView):
 			print("presenceDeviceComponentId: " + str(presenceDeviceComponentId))
 			zipCode = request.data.get('updateData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
 			print("Zipcode: " + str(zipCode))
-			# TODO delete previous subscription so I can post this new one.
+			# delete previous subscription so you can post this new one.
+			smartThingsCommand = requests.delete(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), headers={'Authorization': ('Bearer ' + installAuthToken)})
+			print("SmartThings delete existing subs response: " + smartThingsCommand.content + "\n")
+
 			# format requst data to create subscription
 			data = json.dumps({"sourceType":"DEVICE","device": {
 				"deviceId": presenceDeviceId,
@@ -346,13 +349,10 @@ class Lifecycles(APIView):
 			}})
 
 			print("Data for subscription: " + str(data))
-			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
 			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
 			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
 			print("ST subscription request text: " + smartThingsCommand.content)
-
-
 
 			response = {'updateData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
