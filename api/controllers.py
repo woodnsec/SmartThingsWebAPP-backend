@@ -98,7 +98,7 @@ class Lifecycles(APIView):
 	parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
 	renderer_classes = (renderers.JSONRenderer,)
 
-
+# TODO add authentication for smartthings
 
 	def get(self, request):
 		"""
