@@ -301,19 +301,19 @@ class Lifecycles(APIView):
 			print("Zipcode: " + str(zipCode))
 
 			# format requst data to create subscription
-			data = json.dumps([{"sourceType":"DEVICE","device": {
+			data = json.dumps({"sourceType":"DEVICE","device": {
 				"deviceId": presenceDeviceId,
 				"componentId": presenceDeviceComponentId,
 				"capability": "switch",
 				"attribute": "switch",
 				"stateChangeOnly": "true",
 				"value":"on"
-			}}])
+			}})
 
 			print("Data for subscription: " + str(data))
 			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
-			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
-			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
+			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
+			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
 			#print("ST subscription request text: " + smartThingsCommand.data)
 
@@ -336,21 +336,21 @@ class Lifecycles(APIView):
 			print("Zipcode: " + str(zipCode))
 			# TODO delete previous subscription so I can post this new one.
 			# format requst data to create subscription
-			data = json.dumps([{"sourceType":"DEVICE","device": {
+			data = json.dumps({"sourceType":"DEVICE","device": {
 				"deviceId": presenceDeviceId,
 				"componentId": presenceDeviceComponentId,
 				"capability": "switch",
 				"attribute": "switch",
 				"stateChangeOnly": "true",
 				"value":"on"
-			}}])
+			}})
 
 			print("Data for subscription: " + str(data))
 			#print("ST URL: " + str(smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata: " + str(data) + 'Authorization: Bearer ' + str(smartThingsAuth) + '')
-			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
-			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + presenceDeviceId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
+			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
+			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("ST subscription request: " + str(smartThingsCommand))
-			#print("ST subscription request text: " + smartThingsCommand.data)
+			print("ST subscription request text: " + smartThingsCommand.content)
 
 
 
