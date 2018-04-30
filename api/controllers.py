@@ -216,11 +216,10 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
-			# print("Config Phase: " + request.data.get('configurationData')['phase'])
 			phase = request.data.get('configurationData')['phase']
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
-				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":["r:devices:*", "r:schedules", "w:schedules", "w:installedapps:*"], "firstPageId": "1"}}}
+				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":[], "firstPageId": "1"}}}
 			elif phase == "PAGE":
 				print("Config Phase: " + phase)
 				response = {
