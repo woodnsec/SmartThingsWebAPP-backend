@@ -293,28 +293,30 @@ class Lifecycles(APIView):
 			print("Installed App token: " + str(installAuthToken))
 			print("Installed Refresh token: " + str(installRefreshToken))
 			print("Installed App ID: " + installedAppId)
-			presenceDeviceId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
-			presenceDeviceComponentId = request.data.get('installData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['componentId']
-			print("presenceDeviceId: " + str(presenceDeviceId))
-			print("presenceDeviceComponentId: " + str(presenceDeviceComponentId))
+
 			zipCode = request.data.get('installData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
 			print("Zipcode: " + str(zipCode))
 
-			# format requst data to create subscription
-			data = json.dumps({"sourceType":"DEVICE","device": {
-				"deviceId": presenceDeviceId,
-				"componentId": presenceDeviceComponentId,
-				"capability": "switch",
-				"attribute": "switch",
-				"stateChangeOnly": "true",
-				"value":"on"
-			}})
+			for presenceDeviceId in request.data.get('installData')['installedApp']['config']['presenceDevices']:
+				currentPresenceDeviceId = presenceDeviceId['deviceConfig']['deviceId']
+				currentComponentId = presenceDeviceId['deviceConfig']['componentId']
+				print("Current Device ID: " + currentPresenceDeviceId)
+				print("Current Component ID: " + currentComponentId)
 
-			print("Data for subscription: " + str(data))
-			print("ST URL: " + str((smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint) + "\ndata = " + str(data) + "\nHeaders = " + "Authorization: Bearer " + str(installAuthToken)))
-			smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
-			print("ST subscription request: " + str(smartThingsCommand))
-			print("ST subscription request text: " + smartThingsCommand.content)
+				# format requst data to create subscription
+				# TODO fix this for actual presence devices
+				data = json.dumps({"sourceType":"DEVICE","device": {
+					"deviceId": currentPresenceDeviceId,
+					"componentId": currentComponentId,
+					"capability": "switch",
+					"attribute": "switch",
+					"stateChangeOnly": "true",
+					"value":"on"
+				}})
+
+				smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
+				print("ST subscription request: " + str(smartThingsCommand))
+				print("ST subscription request text: " + smartThingsCommand.content)
 
 			response = {'installData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
