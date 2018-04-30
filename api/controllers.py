@@ -75,7 +75,8 @@ devicesEndpoint = "devices/"
 installedAppsEndpoint = "installedapps/"
 subscriptionEndpoint = "/subscriptions"
 deviceStatusCheckEndpoint = "/components/main/status"
-
+"""
+# hard coded test info for GET testing below. 
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darts.txt", "r") as f:
 	dartsLight = f.read().rstrip()
@@ -83,7 +84,7 @@ with open("./api/deviceId_darts.txt", "r") as f:
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darkSwitch.txt", "r") as f:
 	darkSwitch = f.read().rstrip()
-
+"""
 # need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
