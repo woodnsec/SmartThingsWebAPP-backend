@@ -34,5 +34,5 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/', include(api_urls)),
     url(r'^', controllers.home),
-    url(r'^\.well-known/', include(certbot_django.server.urls))
+    url(r'^\.well-known/', include('certbot_django.server.urls'))
 ]

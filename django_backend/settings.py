@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_json_api',
     'django_filters',
+    'asymmetric_jwt_auth',
     'certbot_django.server'
 ]
 
@@ -65,6 +66,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'asymmetric_jwt_auth.middleware.JWTAuthMiddleware',
 ]
 
 #ROOT_URLCONF = 'django_backend.urls'

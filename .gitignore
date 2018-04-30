@@ -105,3 +105,4 @@ ENV/
 weatherApiKeyLocal.txt
 token*.txt
 deviceId*.txt
+certbot*

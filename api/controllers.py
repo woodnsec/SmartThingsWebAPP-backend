@@ -77,14 +77,6 @@ subscriptionEndpoint = "/subscriptions"
 deviceStatusCheckEndpoint = "/components/main/status"
 
 # need to have a local file for storage that is ignored by github
-with open("./api/deviceId_darts.txt", "r") as f:
-	dartsLight = f.read().rstrip()
-
-# need to have a local file for storage that is ignored by github
-with open("./api/deviceId_darkSwitch.txt", "r") as f:
-	darkSwitch = f.read().rstrip()
-
-# need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
 	smartThingsAuth = f.read().rstrip()
