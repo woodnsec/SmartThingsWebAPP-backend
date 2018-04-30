@@ -76,7 +76,7 @@ installedAppsEndpoint = "installedapps/"
 subscriptionEndpoint = "/subscriptions"
 deviceStatusCheckEndpoint = "/components/main/status"
 """
-# hard coded test info for GET testing below. 
+# hard coded test info for GET testing below.
 # need to have a local file for storage that is ignored by github
 with open("./api/deviceId_darts.txt", "r") as f:
 	dartsLight = f.read().rstrip()
@@ -97,6 +97,8 @@ class Lifecycles(APIView):
 	permission_classes = (AllowAny,)
 	parser_classes = (parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser)
 	renderer_classes = (renderers.JSONRenderer,)
+
+
 
 	def get(self, request):
 		"""
