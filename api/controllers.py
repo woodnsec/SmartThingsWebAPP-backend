@@ -102,7 +102,7 @@ class Lifecycles(APIView):
 
 	def get(self, request):
 		"""
-		this get request is for testing api calls to weather API and SmartThings API
+		this get request is for testing api calls to weather API and SmartThings API, will remove for final commit
 		"""
 
 		params = {"zip": "68116", "APPID": weatherApiKey}
@@ -209,15 +209,13 @@ class Lifecycles(APIView):
 		lifecycle = bleach.clean(request.data.get('lifecycle'))
 		if lifecycle == 'PING':
 			print("PING LIFECYCLE")
-			#print(request.data.get('pingData'))
-			#print("challenge: " + request.data.get('pingData')["challenge"])
+			"""
+			this lifecycle is necessary for registering the smart app with SmartThings developer portal Automations section.
+			"""
 			challenge = bleach.clean(request.data.get('pingData')["challenge"])
-			print(challenge)
-
 			# nested dictionary below to send appropriate nested json response
 			response = {'pingData': {'challenge': challenge}}
-			# garbage return "{\"pingData\": {\"challenge\": \"1a904d57-4fab-4b15-a11e-1c4bfe7cb502\"}}"
-			# response = json.dumps({'pingData': {'challenge': challenge }})
+
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'CONFIGURATION':
