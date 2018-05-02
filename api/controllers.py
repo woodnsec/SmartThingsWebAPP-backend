@@ -54,10 +54,6 @@ def home(request):
 
 	return render(request, 'index.html')
 
-
-# weather api stuff definitions here
-zipcode = "zip=68116"
-
 # cron schedules - not needed at this time.
 fiveMin = {"name":"schedule-interval-5-minutes", "'cron'": {"expression": "0/5 * * * ? *", "timezone":"CST"}}
 tenMin = {"name":"schedule-interval-10-minutes", "'cron'": {"expression": "0/10 * * * ? *", "timezone":"CST"}}
@@ -75,16 +71,7 @@ devicesEndpoint = "devices/"
 installedAppsEndpoint = "installedapps/"
 subscriptionEndpoint = "/subscriptions"
 deviceStatusCheckEndpoint = "/components/main/status"
-"""
-# hard coded test info for GET testing below.
-# need to have a local file for storage that is ignored by github
-with open("./api/deviceId_darts.txt", "r") as f:
-	dartsLight = f.read().rstrip()
 
-# need to have a local file for storage that is ignored by github
-with open("./api/deviceId_darkSwitch.txt", "r") as f:
-	darkSwitch = f.read().rstrip()
-"""
 # need to have a local file for storage that is ignored by github
 componentsEndpoint = "/commands"
 with open("./api/tokenST.txt", "r") as f:
@@ -100,108 +87,6 @@ class Lifecycles(APIView):
 
 # TODO add authentication for smartthings
 
-	def get(self, request):
-		"""
-		this get request is for testing api calls to weather API and SmartThings API, will remove for final commit
-		"""
-
-		params = {"zip": "68116", "APPID": weatherApiKey}
-
-		currentWeather = requests.get(url = weatherURL, params = params)
-
-		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
-		"""
-		index the important weather info into variables
-		"""
-		location = currentWeatherDict['name']
-		weatherMain = currentWeatherDict['weather'][0]['main']
-		weatherId = currentWeatherDict['weather'][0]['id']
-		weatherDescription = currentWeatherDict['weather'][0]['description']
-		cloudinessInt = currentWeatherDict['clouds']['all']
-		sunrise = currentWeatherDict['sys']['sunrise']
-		sunset = currentWeatherDict['sys']['sunset']
-		# summary for console output
-		weatherSummary = ("##########\nWeather Summary:\nLocation: " + location + "\nWeather Type: " + weatherMain + "\nWeather ID: " + str(weatherId) + "\nWeather Description: " + weatherDescription + "\nCloudiness: " + str(cloudinessInt) + "%\n##########")
-		sunTimes = ("Sun Times in Epoc UTC:\nSunrise: " + str(sunrise) + "\nSunset: " + str(sunset) + "\n##########\n" )
-		print(weatherSummary)
-		print(sunTimes)
-
-		# API call to SmartThings GET device
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
-		#print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
-		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
-
-		# trying to get device status
-		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
-		print("dartsLight deviceStatus: " + str(deviceStatus))
-
-
-		if (deviceStatus == "off"):
-			print("light was off, turning on.")
-			switchCommand = "on"
-		else:
-			print("light was on, turning off.")
-			switchCommand = "off"
-
-		# API call to SmartThings POST device start
-		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
-
-		#print(data)
-		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + dartsLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
-		smartThingsCommandDict = json.loads(smartThingsCommand.text)
-
-		# troubleshooting if requests aren't good
-		if (str(smartThingsCommand) == "<Response [200]>"):
-			print("API Call Success!")
-		else:
-			print("smartThingsCommand response: " + str(smartThingsCommand))
-			print("ST API POST Return: " + str(smartThingsCommandDict))
-
-
-		# logic to switch darkSwitch on and off. This will trigger the modes switch at the hub via a routine
-		print("\n##########\nWeather logic results below:")
-
-		# check current status of darkSwitch
-		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + darkSwitch + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
-		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
-		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
-		stURL = (smartThingsURL + devicesEndpoint + darkSwitch + componentsEndpoint)
-		print("darkSwitch deviceStatus: " + str(deviceStatus))
-
-		if (weatherId == 800): # weather is clear
-			print("ITS CLEAR OUTSIDE")
-			switchCommand = "off"
-		elif (weatherId in range(801,805)): # Weather is cloudy
-			if (cloudinessInt <= 50): # threshold for being dark outside
-				print("NOT CLOUDY AT ALL")
-				switchCommand = "off"
-			else:
-				print("more cloudy")
-				switchCommand = "on"
-		elif (weatherId in range(700, 799)):
-			print("Atmosphere condition: " + weatherMain)
-			switchCommand = "on"
-		else:
-			print("no matching weatherId")
-			switchCommand = "off"
-
-		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
-
-		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + darkSwitch + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
-
-		# troubleshooting if requests aren't good
-		if (str(smartThingsCommand) == "<Response [200]>"):
-			print("API Call Success!")
-		else:
-			print("smartThingsCommand response: " + str(smartThingsCommand))
-			print("ST API POST Return: " + str(smartThingsCommandDict))
-		smartThingsCommandDict = json.loads(smartThingsCommand.text)
-
-
-
-		print("##########\n")
-
-		return Response(smartThingsGetDevicesDict, content_type='json', status=status.HTTP_200_OK)
 	def post(self, request):
 		print("REQUEST DATA: ")
 		print(str(request.data))
