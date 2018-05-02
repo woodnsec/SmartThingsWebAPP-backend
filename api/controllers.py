@@ -110,6 +110,9 @@ class Lifecycles(APIView):
 		currentWeather = requests.get(url = weatherURL, params = params)
 
 		currentWeatherDict = json.loads(currentWeather.text) # converts JSON into dictionary
+		"""
+		index the important weather info into variables
+		"""
 		location = currentWeatherDict['name']
 		weatherMain = currentWeatherDict['weather'][0]['main']
 		weatherId = currentWeatherDict['weather'][0]['id']
@@ -127,7 +130,7 @@ class Lifecycles(APIView):
 		smartThingsGetDevices = requests.get(url = (smartThingsURL + devicesEndpoint + dartsLight + deviceStatusCheckEndpoint), headers={'Authorization': ('Bearer ' + smartThingsAuth)})
 		#print("smartThingsGetDevices return code: " + str(smartThingsGetDevices))
 		smartThingsGetDevicesDict = json.loads(smartThingsGetDevices.text)
-		#print("ST API GET Return: " + str(smartThingsGetDevicesDict) + "\n\n")
+
 		# trying to get device status
 		deviceStatus = smartThingsGetDevicesDict["switch"]['switch']['value'] # could also be light, switch, value.
 		print("dartsLight deviceStatus: " + str(deviceStatus))
@@ -183,7 +186,7 @@ class Lifecycles(APIView):
 			switchCommand = "off"
 
 		data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
-		#print(data)
+
 		smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + darkSwitch + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
 
 		# troubleshooting if requests aren't good
@@ -288,18 +291,16 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'INSTALL':
 			print("INSTALL LIFECYCLE")
-			# do something here
+			"""
+			When the user installs the app this code will run. Get information from ST post request, load into local variables.
+			"""
 			installedAppId = request.data.get('installData')['installedApp']['installedAppId']
 			installAuthToken = request.data.get('installData')['authToken']
 			installRefreshToken = request.data.get('installData')['refreshToken']
-			print("Installed App token: " + str(installAuthToken))
-			print("Installed Refresh token: " + str(installRefreshToken))
-			print("Installed App ID: " + installedAppId)
-
 			zipCode = request.data.get('installData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
-			print("Zipcode: " + str(zipCode))
 
-			for presenceDeviceId in request.data.get('installData')['installedApp']['config']['presenceDevices']:
+
+			for presenceDeviceId in request.data.get('installData')['installedApp']['config']['presenceDevices']: # for loop to handle multiple device subscriptions
 				currentPresenceDeviceId = presenceDeviceId['deviceConfig']['deviceId']
 				currentComponentId = presenceDeviceId['deviceConfig']['componentId']
 				print("Current Device ID: " + currentPresenceDeviceId)
@@ -315,39 +316,35 @@ class Lifecycles(APIView):
 					"stateChangeOnly": "true",
 					"value":"on"
 				}})
-
 				smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
-				print("ST subscription request: " + str(smartThingsCommand))
-				print("ST subscription request text: " + smartThingsCommand.content)
+				# troubleshooting if requests aren't good
+				if (str(smartThingsCommand) == "<Response [200]>"):
+					print("ST API Call Success!")
+				else:
+					print("smartThingsCommand response: " + str(smartThingsCommand))
+					print("ST API POST Return: " + smartThingsCommand.content))
+
 
 			response = {'installData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
 
 		elif lifecycle == 'UPDATE':
-			"""
-			When the user updates the configuration of the app this code will run.
-			"""
 			print("UPDATE LIFECYCLE")
+			"""
+			When the user updates the configuration of the app this code will run. Get information from ST post request, load into local variables.
+			"""
 			installedAppId = request.data.get('updateData')['installedApp']['installedAppId']
 			installAuthToken = request.data.get('updateData')['authToken']
 			installRefreshToken = request.data.get('updateData')['refreshToken']
-			print("Installed App token: " + str(installAuthToken))
-			print("Installed Refresh token: " + str(installRefreshToken))
-			print("Installed App ID: " + installedAppId)
-
 			zipCode = request.data.get('updateData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
-			print("Zipcode: " + str(zipCode))
-			# delete previous subscription so you can post this new one.
+
+			# delete previous subscription so you can post new ones.
 			smartThingsCommand = requests.delete(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), headers={'Authorization': ('Bearer ' + installAuthToken)})
 			print("SmartThings delete existing subs response: " + smartThingsCommand.content + "\n")
 
-			for presenceDeviceId in request.data.get('updateData')['installedApp']['config']['presenceDevices']:
+			for presenceDeviceId in request.data.get('updateData')['installedApp']['config']['presenceDevices']: # for loop to handle multiple device subscriptions
 				currentPresenceDeviceId = presenceDeviceId['deviceConfig']['deviceId']
 				currentComponentId = presenceDeviceId['deviceConfig']['componentId']
-				print("Current Device ID: " + currentPresenceDeviceId)
-				print("Current Component ID: " + currentComponentId)
-
-
 
 				# format requst data to create subscription
 				# TODO fix this for actual presence devices
@@ -361,8 +358,12 @@ class Lifecycles(APIView):
 				}})
 
 				smartThingsCommand = requests.post(url = (smartThingsURL + installedAppsEndpoint + installedAppId + subscriptionEndpoint), data = data, headers={'Authorization': ('Bearer ' + installAuthToken)})
-				print("ST subscription request: " + str(smartThingsCommand))
-				print("ST subscription request text: " + smartThingsCommand.content)
+				# troubleshooting if requests aren't good
+				if (str(smartThingsCommand) == "<Response [200]>"):
+					print("ST API Call Success!")
+				else:
+					print("smartThingsCommand response: " + str(smartThingsCommand))
+					print("ST API POST Return: " + smartThingsCommand.content))
 
 			response = {'updateData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
@@ -374,15 +375,16 @@ class Lifecycles(APIView):
 
 		elif lifecycle == 'EVENT':
 			print("EVENT LIFECYCLE")
-			#info from smartThings
+			"""
+			Gather information from event lifecycle post request, then assign to local variables
+			"""
 			zipCode = request.data.get('eventData')['installedApp']['config']['zipCode'][0]['stringConfig']['value']
-
-			print("Zipcode: " + str(zipCode))
 			presenceDeviceId = request.data.get('eventData')['installedApp']['config']['presenceDevices'][0]['deviceConfig']['deviceId']
-			print("presenceDeviceId: " + str(presenceDeviceId))
 			lightswitches = request.data.get('eventData')['installedApp']['config']['lightswitches'][0]['deviceConfig']['deviceId']
 
-			# weather API here
+			"""
+			Get the zipCode from the installed app, then send API request to weather, and finally load important data into variables
+			"""
 			params = {"zip": zipCode, "APPID": weatherApiKey}
 
 			currentWeather = requests.get(url = weatherURL, params = params)
@@ -401,7 +403,9 @@ class Lifecycles(APIView):
 			print(weatherSummary)
 			print(sunTimes)
 
-			# SmartThings execution here
+			"""
+			weather logic below, this determines if we want to turn on the lights
+			"""
 			if (weatherId == 800): # weather is clear
 				print("ITS CLEAR OUTSIDE")
 				switchCommand = "off"
@@ -421,9 +425,12 @@ class Lifecycles(APIView):
 
 			switchCommand = "on" # test value to illustrate event lifecycle.
 			data = json.dumps({"commands": [{"component": "main", "capability": "switch", "command": switchCommand}]})
-			#print(data)
+
+			"""
+			only turn on lights if the switch command is set to on based upon weather logic above
+			"""
 			if (switchCommand == "on"):
-				for lightswitch in request.data.get('eventData')['installedApp']['config']['lightswitches']:
+				for lightswitch in request.data.get('eventData')['installedApp']['config']['lightswitches']: # for loop to send commands to multiple lights
 					currentLight = lightswitch['deviceConfig']['deviceId']
 					smartThingsCommand = requests.post(url = (smartThingsURL + devicesEndpoint + currentLight + componentsEndpoint), data = data, headers = {'Authorization': 'Bearer ' + smartThingsAuth + ''})
 
@@ -432,13 +439,9 @@ class Lifecycles(APIView):
 					print("API Call Success!")
 				else:
 					print("smartThingsCommand response: " + str(smartThingsCommand))
-					print("ST API POST Return: " + str(smartThingsCommandDict))
+					print("ST API POST Return: " + smartThingsCommand.content)
 			else:
 				print("No action taken, its still light outside")
-
-			#print("Zipcode: " + str(zipCode))
-			# do handleEvent here like set mode (virtual switch) let the app take care of the rest.
-			# do something here
 
 			response = {'eventData': {}}
 			return Response(response, content_type='json', status=status.HTTP_200_OK)
