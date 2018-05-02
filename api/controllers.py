@@ -223,9 +223,11 @@ class Lifecycles(APIView):
 		elif lifecycle == 'CONFIGURATION':
 			print("CONFIGURATION LIFECYCLE")
 			phase = request.data.get('configurationData')['phase']
+			# handle initialize phase of configuration lifecycle. This sets name of app, description etc.
 			if phase == "INITIALIZE":
 				print("Config Phase: " + phase)
 				response = {"configurationData": {"initialize": {"name": "WeatherAPP", "description":"Weather App to switch modes", "id":"app", "permissions":[], "firstPageId": "1"}}}
+			# page phase configures content presented to user and defines options for selecting devices etc.
 			elif phase == "PAGE":
 				print("Config Phase: " + phase)
 				response = {
@@ -285,7 +287,6 @@ class Lifecycles(APIView):
 				  }
 				}
 				# TODO fix presence devices to actually monitor presence Devices.
-				print("whew thats a lot of config: " + str(response))
 
 			return Response(response,  status=status.HTTP_200_OK)
 
